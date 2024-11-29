@@ -116,6 +116,10 @@ def save_courses_to_snowflake(user_id, courses, jwt_token):
 
         # Success message
         st.success("Courses updated successfully!")
+
+        if "completed_credits" in response.json():
+            st.session_state["completed_credits"] = response.json()["completed_credits"]
+
         return response.json()
 
     except requests.exceptions.HTTPError as e:
@@ -196,6 +200,8 @@ def update_details_page():
     with profile_col2:
         campus = st.selectbox("Campus", CAMPUS_OPTIONS, index=CAMPUS_OPTIONS.index(user_profile.get("campus", CAMPUS_OPTIONS[0])))
         gpa = st.number_input("GPA", value=min(user_profile.get("gpa", 0.0), 4.0), min_value=0.0, max_value=4.0, format="%.2f")
+        completed_credits = st.session_state.get("completed_credits", user_profile.get("completed_credits", 0))
+        st.text_input("Completed Credits", value=completed_credits, disabled=True)
 
     if st.button("Save Profile"):
         updated_profile = {

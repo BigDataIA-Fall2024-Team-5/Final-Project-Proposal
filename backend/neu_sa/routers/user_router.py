@@ -73,7 +73,7 @@ def fetch_user_data_from_snowflake(user_id: int):
     try:
         cursor.execute(
             """
-            SELECT COLLEGE, PROGRAM_NAME, PROGRAM_ID, GPA, CAMPUS, TRANSCRIPT_LINK
+            SELECT COLLEGE, PROGRAM_NAME, PROGRAM_ID, GPA, CAMPUS, TRANSCRIPT_LINK, COMPLETED_CREDITS
             FROM USER_PROFILE
             WHERE USER_ID = %s
             """,
@@ -88,6 +88,7 @@ def fetch_user_data_from_snowflake(user_id: int):
                 "gpa": 0.0,
                 "campus": "Not Provided",
                 "transcript_link": "",
+                "completed_credits": 0
             }
         else:
             user_profile = {
@@ -97,6 +98,7 @@ def fetch_user_data_from_snowflake(user_id: int):
                 "gpa": profile_result[3] or 0.0,
                 "campus": profile_result[4] or "Not Provided",
                 "transcript_link": profile_result[5] or "",
+                "completed_credits": profile_result[6] or 0
             }
 
         cursor.execute(
@@ -179,7 +181,7 @@ async def update_user_courses(user_id: int, courses: List[UserCourse], jwt_token
     if jwt_token["user_id"] != user_id:
         raise HTTPException(status_code=403, detail="Unauthorized access.")
 
-    VALID_GRADES = {"A", "A-", "B+", "B", "B-", "C+", "C", "C-", "F","S","IP (In Progress)"}
+    VALID_GRADES = {"A", "A-", "B+", "B", "B-", "C+", "C", "C-", "F", "S", "IP (In Progress)"}
     VALID_CREDITS = {0, 1, 2, 3, 4}  # Valid credits: 0, 1, 2, 3, 4
 
     try:
@@ -248,8 +250,29 @@ async def update_user_courses(user_id: int, courses: List[UserCourse], jwt_token
                 (user_id, course.course_code, course.course_name, course.grade, course.credits),
             )
 
+        # Sum up the credits for all completed courses
+        cursor.execute(
+            """
+            SELECT COALESCE(SUM(credits), 0)
+            FROM USER_COURSES
+            WHERE user_id = %s
+            """,
+            (user_id,),
+        )
+        total_credits = cursor.fetchone()[0]
+
+        # Update the completed credits in the user profile
+        cursor.execute(
+            """
+            UPDATE USER_PROFILE
+            SET COMPLETED_CREDITS = %s
+            WHERE USER_ID = %s
+            """,
+            (total_credits, user_id),
+        )
+
         conn.commit()
-        return {"message": "Courses updated successfully."}
+        return {"message": "Courses updated successfully.", "completed_credits": total_credits}
 
     except HTTPException as e:
         conn.rollback()
@@ -260,3 +283,4 @@ async def update_user_courses(user_id: int, courses: List[UserCourse], jwt_token
     finally:
         cursor.close()
         conn.close()
+

@@ -47,6 +47,7 @@ def snowflake_setup():
             MAX_CREDIT_HOURS INT,
             MIN_GPA FLOAT,
             CORE_CREDIT_REQ INT,
+            CORE_OPTIONS_CREDIT_REQ INT,
             ELECTIVE_CREDIT_REQ INT,
             SUBJECT_CREDIT_REQ INT,
             ELECTIVE_EXCEPTION VARCHAR(500)
@@ -57,8 +58,7 @@ def snowflake_setup():
         CREATE OR REPLACE TABLE {database_name}.{schema_name}.SUBJECT_AREAS (
             PROGRAM_ID VARCHAR(10) PRIMARY KEY,
             SUBJECT_CODE VARCHAR(10),
-            MIN_CREDIT_HOURS INT,
-            NOTES VARCHAR(500)
+            MIN_CREDIT_HOURS INT
         );
         """
 
@@ -66,7 +66,13 @@ def snowflake_setup():
         CREATE OR REPLACE TABLE {database_name}.{schema_name}.CORE_REQUIREMENTS (
             PROGRAM_ID VARCHAR(10),
             COURSE_CODE VARCHAR(10),
-            CREDITS INT,
+            PRIMARY KEY (PROGRAM_ID, COURSE_CODE)
+        );
+        """
+        create_core_options_requirements_table = f"""
+        CREATE OR REPLACE TABLE {database_name}.{schema_name}.CORE_OPTIONS_REQUIREMENTS (
+            PROGRAM_ID VARCHAR(10),
+            COURSE_CODE VARCHAR(10),
             PRIMARY KEY (PROGRAM_ID, COURSE_CODE)
         );
         """
@@ -84,11 +90,12 @@ def snowflake_setup():
             USER_ID INT AUTOINCREMENT(1, 1) PRIMARY KEY,
             USERNAME VARCHAR(50),
             PASSWORD VARCHAR(200),
+            GPA FLOAT,
+            COMPLETED_CREDITS INT DEFAULT 0,
+            CAMPUS VARCHAR(25),
             COLLEGE VARCHAR(50),
             PROGRAM_NAME VARCHAR(50),
             PROGRAM_ID VARCHAR(10),
-            GPA FLOAT,
-            CAMPUS VARCHAR(25),
             TRANSCRIPT_LINK VARCHAR(100)
         );
         """
@@ -161,19 +168,22 @@ def snowflake_setup():
         cursor.execute(create_core_requirements_table)
         print("CORE_REQUIREMENTS table created.")
 
+        cursor.execute(create_core_options_requirements_table)
+        print("CORE_REQUIREMENTS table created.")
+
         cursor.execute(create_elective_requirements_table)
         print("ELECTIVE_REQUIREMENTS table created.")
 
-        cursor.execute(create_user_profile_table)
+        #cursor.execute(create_user_profile_table)
         print("USER_PROFILE table created.")
 
-        cursor.execute(create_user_courses_table)
+        #cursor.execute(create_user_courses_table)
         print("USER_COURSES table created.")
 
-        cursor.execute(create_classes_table)
+        #cursor.execute(create_classes_table)
         print("CLASSES table created.")
 
-        cursor.execute(create_course_catalog_table)
+        #cursor.execute(create_course_catalog_table)
         print("COURSE_CATALOG table created.")
 
     except snowflake.connector.errors.ProgrammingError as e:

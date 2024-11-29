@@ -34,13 +34,14 @@ def clean_text(text):
 
 # Function to clean title
 def clean_title(title):
-    title = re.sub(r'\(\d+(-\d+)? Hours\)', '', title).strip()
+    # Match both 'Hour' and 'Hours' in the pattern
+    title = re.sub(r'\(\d+(-\d+)?\sHour(?:s)?\)', '', title).strip()
     title = title.rstrip('.')
     return title
 
-# Function to process credit hours
 def process_credit_hours(title):
-    match = re.search(r'\((\d+)(?:-(\d+))? Hours\)', title)
+    # Match both 'Hour' and 'Hours' in the pattern
+    match = re.search(r'\((\d+)(?:-(\d+))?\sHour(?:s)?\)', title)
     if match:
         if match.group(2):
             return float(match.group(2))  # Take the maximum of the range
@@ -288,11 +289,11 @@ def main(subject_codes):
     insert_data_to_snowflake(df)
     print("Process completed successfully.")
 
-    pinecone_index = create_index_in_pinecone()
+    #pinecone_index = create_index_in_pinecone()
 
-    add_course_data_to_index(pinecone_index, df)
+    #add_course_data_to_index(pinecone_index, df)
 
 # Execute script
 if __name__ == "__main__":
-    subject_codes = ["info", "damg", "tele", "csye"]
+    subject_codes = ["info", "damg", "tele", "csye","encp"]
     main(subject_codes)
