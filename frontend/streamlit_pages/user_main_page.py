@@ -2,10 +2,33 @@ import streamlit as st
 import os
 from dotenv import load_dotenv
 import requests
+import pandas as pd
 
 # Load environment variables
 load_dotenv()
 API_URL = os.getenv("BACKEND_URL")
+
+def fetch_user_data(user_id, jwt_token):
+    """
+    Fetch user data from the backend API.
+    
+    Args:
+        user_id (str): The ID of the user.
+        jwt_token (str): The JWT token for authentication.
+    
+    Returns:
+        dict: The user data as JSON if the request is successful; otherwise None.
+    """
+    try:
+        response = requests.get(
+            f"{API_URL}/user/{user_id}",
+            headers={"Authorization": f"Bearer {jwt_token}"}
+        )
+        response.raise_for_status()  # Raise an exception for HTTP errors
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error fetching user data: {e}")
+        return None
 
 def user_main_page():
     # Check if user is logged in
@@ -14,6 +37,35 @@ def user_main_page():
         st.session_state["page"] = "login_page"
         st.rerun()  # Ensure page reruns to redirect
         return
+    
+    if "user_data" not in st.session_state:
+        user_id = st.session_state.get("user_id")  # Replace with actual user_id logic
+        jwt_token = st.session_state.get("jwt_token")
+        user_data = fetch_user_data(user_id, jwt_token)
+        if user_data:
+            st.session_state["user_data"] = user_data
+        else:
+            st.session_state["user_data"] = {}
+
+    # Extract courses from user data
+    user_courses = st.session_state["user_data"].get("courses", [])
+
+    # Initialize session state variables for courses
+    if "courses" not in st.session_state:
+        st.session_state.courses = user_courses
+
+    # Standardize course keys
+    standardized_courses = []
+    for course in st.session_state.courses:
+        standardized_course = {
+            "course_code": course.get("course_code"),
+            "course_name": course.get("course_name"),
+            "grade": course.get("grade"),
+            "credits": course.get("credits"),
+        }
+        standardized_courses.append(standardized_course)
+    st.session_state.courses = standardized_courses
+
 
     # Initialize session state variables if not present
     if "history" not in st.session_state:
@@ -68,19 +120,34 @@ def user_main_page():
 
     # Left Column: Dashboard
     with col1:
-        st.subheader("My Dashboard")
-        st.write("Explore your course suggestions and academic details here.")
-        st.write("Add more details or summaries for your user dashboard.")
+        #st.subheader("My Dashboard")
+        #st.write("Explore your course suggestions and academic details here.")
+
+        # Display user courses
+        st.subheader("My Courses")
+        if st.session_state.courses:
+            courses_df = pd.DataFrame(st.session_state.courses)
+            st.table(courses_df)  # Display courses as a table
+        else:
+            st.info("No courses added yet. Add your first course below!")
 
         # Buttons for user actions
-        if st.button("Update Details"):
-            st.session_state["page"] = "update_details_page"
-            st.rerun()
+    if st.button("Update Details"):
+        # Clear the 'courses' session state
+        variables_to_delete = ["courses","profile","user_data"]
+        for var in variables_to_delete:
+            if var in st.session_state:
+                del st.session_state[var]
 
-        if st.button("Logout"):
-            st.session_state.clear()
-            st.session_state["page"] = "login_page"
-            st.rerun()
+        # Navigate to the update details page
+        st.session_state["page"] = "update_details_page"
+        st.rerun()
+
+    if st.button("Logout"):
+        st.session_state.clear()
+        st.session_state["page"] = "login_page"
+        st.rerun()
+
 
     # Right Column: Chatbot Interface
     with col2:

@@ -155,7 +155,7 @@ def update_details_page():
     st.title("Manage Your Profile and Courses")
 
     if st.button("Back to Main Page"):
-        variables_to_delete = ["courses", "transcript_presigned_url", "selected_course_to_delete","additional_details","courses_detected","user_profile","message","save_courses_error"]
+        variables_to_delete = ["courses", "transcript_presigned_url", "selected_course_to_delete","additional_details","courses_detected","user_profile","message","save_courses_error","user_data","courses"]
         for var in variables_to_delete:
             if var in st.session_state:
                 del st.session_state[var]
