@@ -7,6 +7,10 @@ from selenium.webdriver.support import expected_conditions as EC
 import pandas as pd
 import time
 from selenium.common.exceptions import WebDriverException
+import boto3
+import os
+import snowflake.connector
+from io import StringIO
 
 def init_driver():
     """Initialize Selenium WebDriver."""
@@ -198,29 +202,116 @@ def main(term, term_id, program, subject_code):
 
     return data
 
+# S3 Configuration
+S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_REGION = os.getenv("AWS_REGION")
+
+# Snowflake Configuration
+def get_snowflake_connection():
+    return snowflake.connector.connect(
+        user=os.getenv("SNOWFLAKE_USER"),
+        password=os.getenv("SNOWFLAKE_PASSWORD"),
+        account=os.getenv("SNOWFLAKE_ACCOUNT"),
+        warehouse=os.getenv("SNOWFLAKE_WAREHOUSE", "WH_NEU_SA"),
+        database=os.getenv("SNOWFLAKE_DATABASE", "DB_NEU_SA"),
+        schema=os.getenv("SNOWFLAKE_SCHEMA", "NEU_SA"),
+    )
+
+def save_to_s3_in_memory(df, bucket_name, s3_key):
+    """Upload a Pandas DataFrame to S3 directly from memory."""
+    s3_client = boto3.client(
+        's3',
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+        region_name=AWS_REGION
+    )
+    csv_buffer = StringIO()
+    df.to_csv(csv_buffer, index=False)
+    try:
+        s3_client.put_object(
+            Bucket=bucket_name,
+            Key=s3_key,
+            Body=csv_buffer.getvalue()
+        )
+        print(f"File uploaded to S3: s3://{bucket_name}/{s3_key}")
+    except Exception as e:
+        print(f"Error uploading to S3: {e}")
+
+def insert_data_to_snowflake_from_s3(s3_key):
+    """Insert data from S3 into Snowflake, avoiding duplicates."""
+    try:
+        conn = get_snowflake_connection()
+        cursor = conn.cursor()
+        
+        # Define table names
+        stage_name = "CLASSES_STAGE"
+        staging_table = "CLASSES_TEMP"
+        target_table = "CLASSES"
+        
+        # Create temporary stage if not exists
+        cursor.execute(f"CREATE TEMPORARY STAGE IF NOT EXISTS {stage_name}")
+        print(f"Stage {stage_name} created/exists.")
+        
+        # Create a temporary staging table
+        cursor.execute(f"""
+            CREATE TEMPORARY TABLE IF NOT EXISTS {staging_table} LIKE {target_table};
+        """)
+        print(f"Temporary table {staging_table} created/exists.")
+        
+        # Load data into the staging table from S3
+        cursor.execute(f"""
+            COPY INTO {staging_table}
+            FROM 's3://{S3_BUCKET_NAME}/{s3_key}'
+            CREDENTIALS = (
+                AWS_KEY_ID='{AWS_ACCESS_KEY_ID}'
+                AWS_SECRET_KEY='{AWS_SECRET_ACCESS_KEY}'
+            )
+            FILE_FORMAT = (TYPE = 'CSV' SKIP_HEADER = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"' EMPTY_FIELD_AS_NULL = TRUE)
+            ON_ERROR = 'CONTINUE'
+        """)
+        print(f"Data loaded into staging table {staging_table}.")
+        
+        # Insert new records into the target table, avoiding duplicates
+        cursor.execute(f"""
+            INSERT INTO {target_table}
+            SELECT *
+            FROM {staging_table}
+            WHERE (TERM, COURSE_CODE, CRN) NOT IN (
+                SELECT TERM, COURSE_CODE, CRN
+                FROM {target_table}
+            );
+        """)
+        print(f"New data inserted into {target_table}.")
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"Error inserting data to Snowflake: {e}")
 
 def collect_all_data():
     all_data = []
     calls = [
-        ("Spring 2025 Semester", "202530", "Information Systems Program", "INFO"),
-        ("Spring 2025 Semester", "202530", "Data Architecture Management", "DAMG"),
-        ("Spring 2025 Semester", "202530", "Telecommunication Systems", "TELE"),
-        ("Spring 2025 Semester", "202530", "Computer Systems Engineering", "CSYE"),
-        ("Fall 2024 Semester", "202510", "Information Systems Program", "INFO"),
-        ("Fall 2024 Semester", "202510", "Data Architecture Management", "DAMG"),
-        ("Fall 2024 Semester", "202510", "Telecommunication Systems", "TELE"),
-        ("Fall 2024 Semester", "202510", "Computer Systems Engineering", "CSYE"),
+        ("Spring 2025 Semester", "202530", "Computer Systems Engineering", "CSYE")
     ]
 
     for term, term_id, program, subject_code in calls:
         print(f"Starting data collection for: {term}, {program}, {subject_code}")
         all_data.extend(main(term, term_id, program, subject_code))
 
-    # Save all data to a single CSV file
+    # Save data to S3 directly and insert it into Snowflake
     if all_data:
         df = pd.DataFrame(all_data)
-        df.to_csv("all_class_details.csv", index=False)
-        print(f"Data saved to all_class_details.csv. Total records: {len(all_data)}")
+        s3_key = "neu_data/all_classes.csv"
+        
+        # Save directly to S3
+        save_to_s3_in_memory(df, S3_BUCKET_NAME, s3_key)
+        
+        # Insert into Snowflake from S3
+        insert_data_to_snowflake_from_s3(s3_key)
+
 
 
 if __name__ == "__main__":
