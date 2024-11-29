@@ -1,0 +1,110 @@
+FAQs for Newly Admitted and Current Students
+
+Below are frequently asked questions of newly admitted and current students. Prospective students can find answers to admissions and application questions at our Graduate Student Support Center. Refer to our Graduate Student Services Quick Information for links to important pages.
+
+
+Course Registration
+===================
+
+
+Enrollment or Degree Verification
+=================================
+
+
+Graduation
+==========
+
+
+Job Opportunities
+=================
+
+
+Stipend Graduate Assistantship (SGA)
+====================================
+
+Q: What do I do if I encounter a technical course registration error such as Prerequisite and Test Score error, Student Attribute error, Program, or Field of Study Restriction etc.?
+A: Please fill out an Override Request Form (follow all the instructions listed on page 2 of this form and obtain all required signatures prior to submitting to the Graduate School).  If the course is outside the approved curriculum for your degree program, your Faculty Advisor must also sign the form at the bottom to indicate if the course is approved to count toward your degree requirements.
+*If your program is part of the Mechanical and Industrial Engineering Department, please fill of the form found under the MIE Course Registration Forms section on the above forms website.
+Links:
+  [Override Request Form](https://coe.northeastern.edu/academics-experiential-learning/graduate-school-of-engineering/graduate-student-services/graduate-forms/)
+
+Q: Can I take a course that is not on my approved curriculum?
+A: First, check the program requirements listed in your catalog year.
+If the course you are interested in is NOT on the list, then you need a Standard Petition form to count it towards your program.
+
+Check “elective outside of approved curriculum”
+Explain why you feel this course is relevant to your field of study.
+Obtain the necessary signatures stated in the instructions on the form.
+
+*If your program is part of the Mechanical and Industrial Engineering Department, please fill of the form found under the MIE Course Registration Forms section on the above forms website.
+Links:
+  [catalog year](https://registrar.northeastern.edu/group/catalog/)
+  [Standard Petition form](https://coe.northeastern.edu/academics-experiential-learning/graduate-school-of-engineering/graduate-student-services/graduate-forms/)
+
+Q: I want to register for a course in the Khoury College of Computer Sciences or the D’Amore McKim School of Business. How can I do that?
+A: Please see instructions and read them carefully. Please note, if the course is NOT on your approved curriculum, you also need to file a Standard Petition form to count it towards your program by following the instructions in the above question.
+Links:
+  [instructions](https://coe.northeastern.edu/academics-experiential-learning/graduate-school-of-engineering/graduate-student-services/course-registration/computer-science-and-business-course-registrations/)
+
+Q: What do I do if I need to register for an individual instruction course (such as Independent Study, MS Project, Thesis, Thesis Continuation, Dissertation, Dissertation Continuation, Exam Preparation – Doctoral) that is not on the class schedule under the instructor I need?
+A: Please complete the Registrar’s Individual Instruction e-form, which can be found in your myNortheastern portal under “Registrar Forms”.
+Links:
+  [myNortheastern portal](https://my.northeastern.edu/welcome)
+
+Q: How do I register for a course offered in videostreaming format (V35 section)?
+A: Videostreaming (V35) course sections are restricted to part-time students, full-time students on co-op, an on-ground section of the course is not offered, or a full-time students with an extenuating circumstance that would prevent graduation.  If you believe you fit this criteria, and you encounter a Student Attribute registration error while registering for a V35 section course, please use the Override Request Form (follow all the instructions listed on page 2 of this form).  Include an explanation of why you need to enroll in the V35 section.  Submit the form directly to the Graduate School of Engineering.  Your request will be reviewed by the Graduate School and you will be notified of the decision. Registration in a V35 section is not guaranteed.
+Links:
+  [Override Request Form](https://coe.northeastern.edu/academics-experiential-learning/graduate-school-of-engineering/graduate-student-services/graduate-forms/)
+
+Q: What does closed-waitlist mean?
+A: When you are trying to add yourself to a waitlist for a course and receive the error of “Closed-waitlist”, this means that the waitlist is at capacity and no additional names can be added to the list at that time.
+
+Q: Does ENCP 6000/6100 count toward my program requirements for graduation?
+A: No, ENCP 6000/6100 is an optional course that can be taken but it does not count toward a student’s program requirement for graduation. Please always refer to your program’s requirements in the catalog year you were admitted.
+
+Q: Do I need to be registered in the semester I am graduating?
+A: Yes, if you are completing your program requirements and planning to graduate in any term, including the summer, you must be registered either for your last course(s) OR for Thesis Continuation/ Dissertation Continuation (if you are working on Thesis or Dissertation).
+
+Q: I need proof that I am enrolled at Northeastern. What do I do?
+A: Students needing verification of enrollment on Northeastern University letterhead may obtain this by submitting a request from the Registrar’s Office.
+Links:
+  [verification of enrollment](https://registrar.northeastern.edu/article/student-enrollment-degree-verification/)
+
+Q: I am a graduate of Northeastern and my employer needs verification of my degree. How can I get this?
+A: You or your employer can request a degree verification from the Registrar’s Office.
+Links:
+  [degree verification](https://registrar.northeastern.edu/group/verifications/)
+
+Q: What do I do if I receive an error message when I click on the Apply to Graduate link on myNortheastern?
+A: This is most likely because your expected graduation date is not listed for the current year you are applying or you are applying after the deadline. Please contact your academic advisor in the Graduate School of Engineering to update your Expected Graduation Date or submit a late graduation application.
+Links:
+  [Graduate School of Engineering](https://coe.northeastern.edu/academics-experiential-learning/graduate-school-of-engineering/graduate-student-services/)
+
+Q: What if I have other graduation questions?
+A: Any questions you may have regarding applying to graduate, your diploma, ceremony information, deadlines, parking, accessible seating, tickets, and regalia can be found on the official Northeastern Commencement website FAQ page.
+Links:
+  [Northeastern Commencement website FAQ page](https://www.northeastern.edu/commencement/)
+
+Q: What are the on-campus job opportunities?
+A: Once you are registered as a student at Northeastern, you can access hourly on-campus job postings through Northeastern’s Student Employment, Graduate Assistantships, and Fellowships (SEGAF) Office web service. The SEGAF Office manages all student employment on campus. Students interested in applying for an on-campus job must log into the SEGAF web service through the “Self-Service” tab in their myNortheastern portal.
+Links:
+  [Student Employment, Graduate Assistantships, and Fellowships (SEGAF) Office](https://studentemployment.neu.edu/JobX_Home.aspx)
+  [myNortheastern](https://my.northeastern.edu/)
+
+Q: Are international students allowed to work off-campus while studying?
+A: F-1 students can work off-campus in their area of study only as part of an approved graduate co-op. Review information on the legalities regarding Curricular Practical Training (CPT) for international students.
+Links:
+  [graduate co-op](https://coe.northeastern.edu/academics-experiential-learning/co-op-experiential-learning/co-op/graduate-co-op/)
+  [Curricular Practical Training (CPT)](https://international.northeastern.edu/ogs/employment/curricular-practical-training-cpt-f1/)
+
+Q: What are the job prospects after graduation?
+A: The Employer Engagement and Career Design Office at Northeastern holds career fairs in both Fall and Spring semesters. Many companies also carry out on-campus recruitment.
+Links:
+  [Employer Engagement and Career Design Office](https://careers.northeastern.edu/)
+
+Q: I have been appointed as an SGA. How do I get paid?
+A: 
+
+Q: I have been appointed an SGA. When can I expect to see my tuition credited to my student account?
+A: 
+
