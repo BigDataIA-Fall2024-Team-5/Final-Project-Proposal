@@ -6,7 +6,7 @@ authors = ["dharun-karthick-ramaraj <dharun.ramaraj@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.11,<3.13"
 selenium = "^4.26.1"
 boto3 = "^1.35.68"
 requests = "^2.32.3"
@@ -15,6 +15,9 @@ certifi = "^2024.8.30"
 snowflake-connector-python = "^3.12.3"
 python-dotenv = "^1.0.1"
 pandas = "^2.2.3"
+pinecone-client = "^5.0.1"
+langchain-pinecone = "^0.2.0"
+langchain-nvidia-ai-endpoints = "^0.3.5"
 
 
 [build-system]

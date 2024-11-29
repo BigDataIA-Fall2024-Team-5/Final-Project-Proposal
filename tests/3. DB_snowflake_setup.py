@@ -111,8 +111,8 @@ def snowflake_setup():
             COURSE_CODE VARCHAR(10),
             CRN INT,
             CAMPUS VARCHAR(25),
-            SCHEDULE_TYPE VARCHAR(20),
-            INSTRUCTIONAL_METHOD VARCHAR(20),
+            SCHEDULE_TYPE VARCHAR(50),
+            INSTRUCTIONAL_METHOD VARCHAR(50),
             INSTRUCTOR VARCHAR(100),
             START_DATE DATE,
             END_DATE DATE,
@@ -128,7 +128,7 @@ def snowflake_setup():
         create_course_catalog_table = f"""
         CREATE OR REPLACE TABLE {database_name}.{schema_name}.COURSE_CATALOG (
             COURSE_CODE VARCHAR(10),
-            COURSE_NAME VARCHAR(50),
+            COURSE_NAME VARCHAR(100),
             DESCRIPTION TEXT,
             PREREQUISITES TEXT,
             COREQUISITES TEXT,
