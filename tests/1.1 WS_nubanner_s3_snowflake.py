@@ -294,9 +294,15 @@ def insert_data_to_snowflake_from_s3(s3_key):
 def collect_all_data():
     all_data = []
     calls = [
-        ("Spring 2025 Semester", "202530", "Computer Systems Engineering", "CSYE")
+        ("Spring 2025 Semester", "202530", "Information Systems Program", "INFO"),
+        ("Spring 2025 Semester", "202530", "Data Architecture Management", "DAMG"),
+        ("Spring 2025 Semester", "202530", "Telecommunication Systems", "TELE"),
+        ("Spring 2025 Semester", "202530", "Computer Systems Engineering", "CSYE"),
+        ("Fall 2024 Semester", "202510", "Information Systems Program", "INFO"),
+        ("Fall 2024 Semester", "202510", "Data Architecture Management", "DAMG"),
+        ("Fall 2024 Semester", "202510", "Telecommunication Systems", "TELE"),
+        ("Fall 2024 Semester", "202510", "Computer Systems Engineering", "CSYE"),
     ]
-
     for term, term_id, program, subject_code in calls:
         print(f"Starting data collection for: {term}, {program}, {subject_code}")
         all_data.extend(main(term, term_id, program, subject_code))
