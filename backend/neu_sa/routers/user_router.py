@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List
 import snowflake.connector
-from routers.auth import validate_jwt
+from neu_sa.routers.auth import validate_jwt
 from dotenv import load_dotenv
 import os
 import re

@@ -2,7 +2,6 @@ import streamlit as st
 import requests
 import os
 from dotenv import load_dotenv
-from PIL import Image
 import base64
 
 # Load environment variables

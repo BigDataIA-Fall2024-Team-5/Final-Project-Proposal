@@ -3,7 +3,7 @@ import boto3
 import os
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
-from routers.auth import validate_jwt
+from neu_sa.routers.auth import validate_jwt
 import snowflake.connector
 
 # Load environment variables

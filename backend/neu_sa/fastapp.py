@@ -1,10 +1,11 @@
 from fastapi import FastAPI
-from routers.auth import auth_router
-from routers.user_router import user_router
-from routers.transcript_router import transcript_router
-from routers.task_detection_agent import task_detection_agent
+from neu_sa.routers.auth import auth_router
+from neu_sa.routers.user_router import user_router
+from neu_sa.routers.transcript_router import transcript_router
+from neu_sa.routers.task_detection_agent import task_detection_agent
 from dotenv import load_dotenv
 import os
+import uvicorn
 
 # Load environment variables
 load_dotenv()
@@ -22,3 +23,8 @@ app.include_router(transcript_router, prefix="/transcripts", tags=["Transcript P
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the NEU-SA backend API!"}
+
+def main():
+    """Run the uvicorn server."""
+    port = int(os.getenv("PORT", "8000"))
+    uvicorn.run("neu_sa.fastapp:app", host="0.0.0.0", port=port, reload=True)
