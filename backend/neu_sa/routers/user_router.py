@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from pydantic import BaseModel
 from typing import List
 import snowflake.connector
@@ -6,6 +6,7 @@ from neu_sa.routers.auth import validate_jwt
 from dotenv import load_dotenv
 import os
 import re
+from neu_sa.utils.recalculate_eligibility import recalculate_eligibility
 
 # Load environment variables
 load_dotenv()
@@ -177,7 +178,7 @@ async def update_user_profile(user_id: int, user_profile: UserProfile, jwt_token
 
 # Endpoint: Update user courses
 @user_router.put("/{user_id}/courses")
-async def update_user_courses(user_id: int, courses: List[UserCourse], jwt_token: str = Depends(validate_jwt)):
+async def update_user_courses(user_id: int, courses: List[UserCourse], jwt_token: str = Depends(validate_jwt), background_tasks: BackgroundTasks = None):
     if jwt_token["user_id"] != user_id:
         raise HTTPException(status_code=403, detail="Unauthorized access.")
 
@@ -272,6 +273,10 @@ async def update_user_courses(user_id: int, courses: List[UserCourse], jwt_token
         )
 
         conn.commit()
+
+        # Run eligibility recalculation in the background
+        background_tasks.add_task(recalculate_eligibility, user_id)
+
         return {"message": "Courses updated successfully.", "completed_credits": total_credits}
 
     except HTTPException as e:

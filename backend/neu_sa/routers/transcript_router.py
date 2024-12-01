@@ -5,6 +5,10 @@ from dotenv import load_dotenv
 from PyPDF2 import PdfReader
 from neu_sa.routers.auth import validate_jwt
 import snowflake.connector
+import re
+import time
+import pandas as pd
+from typing import Tuple, List, Dict
 
 # Load environment variables
 load_dotenv()
@@ -67,13 +71,6 @@ def upload_to_s3(file: UploadFile, user_id: int):
         return presigned_url, file_url
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to upload file to S3: {str(e)}")
-
-from fastapi import HTTPException, UploadFile
-import boto3
-import re
-import time
-import pandas as pd
-from typing import Tuple, List, Dict
 
 # Helper functions for processing AWS Textract results
 def get_rows_columns_map(table_result, blocks_map):
