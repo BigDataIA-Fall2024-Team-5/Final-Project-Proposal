@@ -1,9 +1,20 @@
 import requests
 from bs4 import BeautifulSoup
-import json
 import re
 import urllib3
 from urllib3.exceptions import InsecureRequestWarning
+from langchain_nvidia_ai_endpoints import NVIDIAEmbeddings
+from pinecone import Pinecone
+import os
+from dotenv import load_dotenv
+from pinecone import Pinecone, ServerlessSpec
+
+# Load environment variables
+load_dotenv()
+
+# Get API keys from environment variables
+NVIDIA_API_KEY = os.getenv('NVIDIA_API_KEY')
+PINECONE_API_KEY = os.getenv('PINECONE_API_KEY')
 
 # Disable SSL warnings
 urllib3.disable_warnings(InsecureRequestWarning)
@@ -12,10 +23,7 @@ def scrape_resources():
     url = "https://coe.northeastern.edu/academics-experiential-learning/graduate-school-of-engineering/graduate-student-services/university-graduate-resources/"
     
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Connection': 'keep-alive',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     }
     
     try:
@@ -24,7 +32,7 @@ def scrape_resources():
         
         soup = BeautifulSoup(response.content, 'html.parser')
         
-        # Remove all script and style elements
+        # Remove unnecessary elements
         for script in soup(["script", "style", "nav", "header", "footer"]):
             script.decompose()
         
@@ -33,70 +41,128 @@ def scrape_resources():
         if not content:
             content = soup.find('main') or soup.find('article')
         
-        resources = []
+        resources_text = []
         
         if content:
             # Find all list items
             list_items = content.find_all('li')
             
+            print("\nRaw Data before chunking and indexing:")
+            print("="*80)
+            
             for li in list_items:
-                resource = {
-                    'title': '',
-                    'description': '',
-                    'links': [],
-                    'phone_numbers': []
-                }
+                resource_text = ""
                 
-                # Extract links and title
+                # Get title from first link
                 links = li.find_all('a')
                 if links:
-                    resource['title'] = links[0].text.strip()
-                    for link in links:
-                        if href := link.get('href'):
-                            resource['links'].append({
-                                'text': link.text.strip(),
-                                'url': href
-                            })
+                    resource_text += f"Title: {links[0].text.strip()}\n"
                 
-                # Extract description
+                # Get description
                 text_content = li.get_text(separator=' ', strip=True)
                 for link in links:
                     text_content = text_content.replace(link.text.strip(), '')
-                resource['description'] = text_content.strip()
+                if text_content.strip():
+                    resource_text += f"Description: {text_content.strip()}\n"
                 
-                # Extract phone numbers
+                # Get links
+                if links:
+                    resource_text += "Links:\n"
+                    for link in links:
+                        if href := link.get('href'):
+                            resource_text += f"- {link.text.strip()}: {href}\n"
+                
+                # Get phone numbers
                 phone_numbers = re.findall(r'\b\d{3}[-.]?\d{3}[-.]?\d{4}\b', text_content)
                 if phone_numbers:
-                    resource['phone_numbers'] = list(set(phone_numbers))
+                    resource_text += f"Phone Numbers: {', '.join(phone_numbers)}\n"
                 
-                # Clean up empty fields
-                if not resource['phone_numbers']:
-                    del resource['phone_numbers']
-                if not resource['links']:
-                    del resource['links']
-                if not resource['description']:
-                    del resource['description']
-                
-                # Only add resources with content
-                if len(resource) > 1:  # Must have more than just title
-                    resources.append(resource)
+                if resource_text:
+                    print(resource_text)
+                    print("-"*80)
+                    resources_text.append(resource_text)
         
-        # Save and display results
-        with open('graduate_resources.json', 'w', encoding='utf-8') as f:
-            json.dump(resources, f, ensure_ascii=False, indent=4)
+        # Save raw text
+        with open('graduate_resources.txt', 'w', encoding='utf-8') as f:
+            for resource in resources_text:
+                f.write(resource + "\n---\n")
         
-        print(f"Successfully scraped {len(resources)} resources\n")
-        print("Content of graduate_resources.json:")
-        print(json.dumps(resources, indent=2))
-        
-        return resources
+        print(f"\nSuccessfully scraped {len(resources_text)} resources")
+        return resources_text
     
-    except requests.RequestException as e:
-        print(f"Error fetching the page: {e}")
-        return []
     except Exception as e:
         print(f"An error occurred: {e}")
         return []
+def chunk_and_index_resources(resources_text):
+    try:
+        # Initialize NVIDIA embeddings
+        embeddings_client = NVIDIAEmbeddings(
+            model="nvidia/nv-embedqa-e5-v5",
+            api_key=NVIDIA_API_KEY
+        )
+        
+        # Initialize Pinecone
+        pc = Pinecone(api_key=PINECONE_API_KEY)
+        
+        # Create or get index
+        index_name = "graduateresources"
+        try:
+            index = pc.Index(index_name)
+        except:
+            pc.create_index(
+                    name="graduateresources",
+                    dimension=1024,
+                    metric='cosine',
+                    spec=ServerlessSpec(
+                    cloud='aws',
+                    region='us-east-1'
+                    )
+                )
+            index = pc.Index(index_name)
+        
+        vectors = []
+        for i, text in enumerate(resources_text):
+            try:
+                # Generate embedding
+                embedding = embeddings_client.embed_query(text)
+                
+                # Create vector
+                vector = {
+                    'id': f"resource_{i}",
+                    'values': embedding,
+                    'metadata': {
+                        'text': text,
+                        'source': 'graduate_resources'
+                    }
+                }
+                vectors.append(vector)
+                
+                # Upsert in batches of 50
+                if len(vectors) >= 50:
+                    index.upsert(vectors=vectors)
+                    print(f"Indexed batch of {len(vectors)} resources")
+                    vectors = []
+                    
+            except Exception as e:
+                print(f"Error processing resource {i}: {e}")
+                continue
+        
+        # Upsert remaining vectors
+        if vectors:
+            index.upsert(vectors=vectors)
+            print(f"Indexed final batch of {len(vectors)} resources")
+        
+        print("All resources have been indexed successfully!")
+        
+    except Exception as e:
+        print(f"Error during indexing: {e}")
 
 if __name__ == "__main__":
-    scrape_resources()
+    print("Starting resource scraping...")
+    resources_text = scrape_resources()
+    
+    if resources_text:
+        print("\nStarting indexing process...")
+        chunk_and_index_resources(resources_text)
+    else:
+        print("No resources to index")
