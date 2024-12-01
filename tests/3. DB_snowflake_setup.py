@@ -80,8 +80,8 @@ def snowflake_setup():
         create_elective_requirements_table = f"""
         CREATE OR REPLACE TABLE {database_name}.{schema_name}.ELECTIVE_REQUIREMENTS (
             PROGRAM_ID VARCHAR(10),
-            COURSE_CODE VARCHAR(10),
-            PRIMARY KEY (PROGRAM_ID, COURSE_CODE)
+            SUBJECT_CODE VARCHAR(10),
+            PRIMARY KEY (PROGRAM_ID, SUBJECT_CODE)
         );
         """
 
@@ -108,6 +108,18 @@ def snowflake_setup():
             GRADE VARCHAR(25),
             CREDITS FLOAT,
             PRIMARY KEY (USER_ID, COURSE_CODE),
+            FOREIGN KEY (USER_ID) REFERENCES {database_name}.{schema_name}.USER_PROFILE(USER_ID)
+        );
+        """
+        create_user_eligibility_table = f"""
+        CREATE OR REPLACE TABLE {database_name}.{schema_name}.USER_ELIGIBILITY (
+            USER_ID INT NOT NULL,
+            CODE VARCHAR(10) NOT NULL,
+            ELIGIBLE BOOLEAN, 
+            REASON VARCHAR(500),
+            STATUS VARCHAR(20) DEFAULT 'PENDING',
+            CHECK_DATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (USER_ID, CODE),
             FOREIGN KEY (USER_ID) REFERENCES {database_name}.{schema_name}.USER_PROFILE(USER_ID)
         );
         """
@@ -159,19 +171,19 @@ def snowflake_setup():
         print(f"Schema '{schema_name}' created or exists.")
 
         print("Creating tables...")
-        cursor.execute(create_program_requirements_table)
+        #cursor.execute(create_program_requirements_table)
         print("PROGRAM_REQUIREMENTS table created.")
 
-        cursor.execute(create_subject_areas_table)
+        #cursor.execute(create_subject_areas_table)
         print("SUBJECT_AREAS table created.")
 
-        cursor.execute(create_core_requirements_table)
+        #cursor.execute(create_core_requirements_table)
         print("CORE_REQUIREMENTS table created.")
 
-        cursor.execute(create_core_options_requirements_table)
-        print("CORE_REQUIREMENTS table created.")
+        #cursor.execute(create_core_options_requirements_table)
+        print("CORE_OPTIONS_REQUIREMENTS table created.")
 
-        cursor.execute(create_elective_requirements_table)
+        #cursor.execute(create_elective_requirements_table)
         print("ELECTIVE_REQUIREMENTS table created.")
 
         #cursor.execute(create_user_profile_table)
@@ -179,6 +191,9 @@ def snowflake_setup():
 
         #cursor.execute(create_user_courses_table)
         print("USER_COURSES table created.")
+
+        cursor.execute(create_user_eligibility_table)
+        print("USER_ELIGIBILITY table created.")
 
         #cursor.execute(create_classes_table)
         print("CLASSES table created.")
