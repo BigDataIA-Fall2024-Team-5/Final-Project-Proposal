@@ -57,8 +57,10 @@ class CourseDescriptionAgent:
             except Exception as e:
                 state["course_description_results"] = {"error": f"Search failed: {e}"}
 
-        state["visited_nodes"] = state.get("visited_nodes", []) + ["course_description"]
-        state["messages"] = state.get("messages", []) + [AIMessage(content=f"Course description search completed. Results: {state['course_description_results']}").model_dump()]
+        state["visited_nodes"].append("course_description")
+        #state["visited_nodes"] = state.get("visited_nodes", []) + ["course_description"]
+        state["messages"].append(AIMessage(content=f"Course description search completed. Results: {state['course_description_results']}").model_dump())
+        #state["messages"] = state.get("messages", []) + [AIMessage(content=f"Course description search completed. Results: {state['course_description_results']}").model_dump()]
         return state
 
 def course_description_node(state: AgentState) -> AgentState:

@@ -1,6 +1,5 @@
 from typing import TypedDict, Annotated, List, Dict, Any
 from langchain_core.messages import BaseMessage, HumanMessage
-from langchain_core.agents import AgentAction
 import operator
 
 class AgentState(TypedDict):
@@ -9,14 +8,13 @@ class AgentState(TypedDict):
     """
     query: str
     messages: Annotated[List[BaseMessage], operator.add]
-    query_type: str
+    nodes_to_visit: List[str]
     course_description_keywords: List[str]
     generated_query: str
     course_description_results: List[Dict[str, Any]]
     sql_results: List[Dict[str, Any]]
     final_response: str
-    visited_nodes: Annotated[List[str], operator.add]
-    intermediate_steps: Annotated[List[tuple[AgentAction, str]], operator.add]
+    visited_nodes: List[str]
 
 def create_agent_state(query: str) -> AgentState:
     """
@@ -25,12 +23,11 @@ def create_agent_state(query: str) -> AgentState:
     return AgentState(
         query=query,
         messages=[HumanMessage(content=query)],
-        query_type="",
+        nodes_to_visit=[],
         course_description_keywords=[],
         generated_query="",
         course_description_results=[],
         sql_results=[],
         final_response="",
-        visited_nodes=[],
-        intermediate_steps=[]
+        visited_nodes=[]
     )

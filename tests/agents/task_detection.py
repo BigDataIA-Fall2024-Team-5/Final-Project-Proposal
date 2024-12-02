@@ -19,15 +19,14 @@ class TaskDetectionAgent:
             (
                 "system",
                 "You are a task detection agent responsible for analyzing user queries "
-                "and routing them to the appropriate tools. Your responsibilities are:\n"
-                "1. Classify queries into one of the following types:\n"
-                "   - 'course_description': Queries focused on conceptual matches with courses (e.g., 'Suggest me a course with Python').\n"
-                "   - 'sql_agent': Queries requiring precise data retrieval from a SQL database "
+                "and determining which tools should be used to answer them. Your responsibilities are:\n"
+                "1. Determine which of the following nodes need to be visited:\n"
+                "   - 'course_description': For queries focused on conceptual matches with courses (e.g., 'Suggest me a course with Python').\n"
+                "   - 'sql_agent': For queries requiring precise data retrieval from a SQL database "
                 "(e.g., 'What are the timings for INFO 7245?').\n"
-                "   - 'course_description+sql_agent': Queries that combine conceptual matches with SQL queries "
+                "   - Both 'course_description' and 'sql_agent': For queries that combine conceptual matches with SQL queries "
                 "(e.g., 'What courses on Python are available, and when can I take them?').\n"
-                "   - 'response_construction': Queries that do not require further analysis (e.g., 'Summarize the results').\n"
-                "2. Generate relevant keywords for 'course_description':\n"
+                "2. Generate relevant keywords for course description searches:\n"
                 "   - Focus on detailed topics, related technologies, and domain-specific skills.\n"
                 "   - Expand keywords to include synonyms, tools, and techniques used in the field.\n"
                 "   - Examples:\n"
@@ -36,32 +35,36 @@ class TaskDetectionAgent:
                 "     - For 'Cloud Computing', generate: ['Cloud Computing', 'AWS', 'Azure', 'GCP', 'Kubernetes', "
                 "'Docker', 'Virtualization', 'Infrastructure-as-a-Service (IaaS)'].\n"
                 "3. Output a JSON with:\n"
-                "   - 'type': The query type ('course_description', 'sql_agent', 'course_description+sql_agent', or 'response_construction').\n"
+                "   - 'nodes_to_visit': List of nodes to visit ('course_description', 'sql_agent', or both).\n"
                 "   - 'course_description_keywords': List of keywords relevant to course descriptions (if applicable).\n"
-                "   - 'explanation': Brief explanation of the classification."
+                "   - 'explanation': Brief explanation of the decision."
             ),
             ("user", "{query}"),
         ])
 
     def detect_task(self, state: AgentState) -> AgentState:
+        
+        print("DEBUG: Executing task detection agent") #debug
+
         input_message = {"query": state["query"]}
         response = self.prompt | self.llm
         try:
             result = response.invoke(input_message)
             result_dict = json.loads(result.content)
-            if not all(key in result_dict for key in ["type", "explanation"]):
+            if not all(key in result_dict for key in ["nodes_to_visit", "explanation"]):
                 raise ValueError("Incomplete response from LLM.")
             
-            state["query_type"] = result_dict["type"]
-            state["course_description_keywords"] = result_dict.get("course_description_keywords", [])
-            state["visited_nodes"] = state.get("visited_nodes", []) + ["task_detection"]
+            state["nodes_to_visit"] = result_dict["nodes_to_visit"]
+
+            print(f"DEBUG: task detection agent: {state["nodes_to_visit"]}") #debug
+
+            state["visited_nodes"].append("task_detection")
+            state["course_description_keywords"].extend(result_dict.get("course_description_keywords", []))
             state["messages"].extend([
                 HumanMessage(content=state["query"]).model_dump(),
-                AIMessage(content=f"Detected query type: {result_dict['type']}").model_dump()
+                AIMessage(content=f"Nodes to visit: {', '.join(result_dict['nodes_to_visit'])}").model_dump()
             ])
         except Exception as e:
             state["error"] = f"Failed to detect task: {e}"
         
         return state
-
-

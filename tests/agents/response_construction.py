@@ -20,6 +20,9 @@ class ResponseConstructionAgent:
         ])
 
     def construct_response(self, state: AgentState) -> AgentState:
+
+        print("DEBUG: Executing response contruction agent") #debug
+
         response = self.llm.invoke(
             self.prompt.format(
                 query=state["query"],

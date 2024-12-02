@@ -12,8 +12,8 @@ class SQLAgent:
         self.conn = self.snowflake_setup()
         self.llm = ChatOpenAI(model=model, temperature=0)
         self.prompt = ChatPromptTemplate.from_messages([
-            ("system", "You are an expert SQL query generator. Given a user query, database schema, and relevant course codes, generate a SQL query to answer the user's question."),
-            ("user", "User Query: {query}\n\nDatabase Schema:\n{schema}\n\nRelevant Course Codes: {course_codes}\n\nGenerate a SQL query to answer the user's question, focusing on the relevant course codes if provided."),
+            ("system", "You are an expert SQL query generator. Given a user query, database schema, and relevant course codes, generate a SQL query to answer the user's question. Note that in the CLASSES table, terms are represented as 'Spring YYYY Semester' or 'Fall YYYY Semester', where YYYY is the year."),
+            ("user", "User Query: {query}\n\nDatabase Schema:\n{schema}\n\nRelevant Course Codes: {course_codes}\n\nGenerate a SQL query to answer the user's question, focusing on the relevant course codes if provided. Remember to use the correct term format (e.g., 'Fall 2024 Semester') when querying the CLASSES table."),
         ])
         self.tables = [
             "PROGRAM_REQUIREMENTS", "CORE_REQUIREMENTS", "CORE_OPTIONS_REQUIREMENTS",
@@ -65,6 +65,9 @@ class SQLAgent:
         return response.content.strip()
 
     def process(self, state: AgentState) -> AgentState:
+        
+        print("DEBUG: Executing sql agent") #debug
+        
         schema = self.get_schema()
         course_codes = []
         if state.get("course_description_results"):
@@ -109,5 +112,5 @@ def test_sql_agent(query: str):
     print(f"Visited Nodes: {final_state.get('visited_nodes', [])}")
 
 if __name__ == "__main__":
-    test_query = "What courses on BigData Analytics are available in the Spring 2024 semester?"
+    test_query = "What courses on BigData Analytics are available in the Spring 2025 semester?"
     test_sql_agent(test_query)
