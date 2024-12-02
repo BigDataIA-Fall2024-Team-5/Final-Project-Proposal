@@ -35,6 +35,9 @@ class GeneralInformationAgent:
             raise RuntimeError(f"Failed to generate embeddings for query '{query}': {e}")
 
     def search(self, state: AgentState) -> AgentState:
+
+        print("DEBUG: Executing course descriptions agent") #debug
+        
         query = state["query"]
         if not query:
             return {"error": "Query text is missing."}

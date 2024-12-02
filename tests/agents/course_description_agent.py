@@ -32,6 +32,9 @@ class CourseDescriptionAgent:
             raise RuntimeError(f"Failed to generate embeddings for query '{query}': {e}")
 
     def search(self, state: AgentState) -> AgentState:
+
+        print("DEBUG: Executing course descriptions agent") #debug
+        
         keywords = state["course_description_keywords"]
         if not keywords:
             state["course_description_results"] = {"error": "No keywords found for course description search."}
