@@ -62,7 +62,3 @@ class CourseDescriptionAgent:
         state["messages"].append(AIMessage(content=f"Course description search completed. Results: {state['course_description_results']}").model_dump())
         #state["messages"] = state.get("messages", []) + [AIMessage(content=f"Course description search completed. Results: {state['course_description_results']}").model_dump()]
         return state
-
-def course_description_node(state: AgentState) -> AgentState:
-    agent = CourseDescriptionAgent()
-    return agent.search(state)

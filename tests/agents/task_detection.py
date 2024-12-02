@@ -26,6 +26,9 @@ class TaskDetectionAgent:
                 "(e.g., 'What are the timings for INFO 7245?').\n"
                 "   - Both 'course_description' and 'sql_agent': For queries that combine conceptual matches with SQL queries "
                 "(e.g., 'What courses on Python are available, and when can I take them?').\n"
+                "   - 'general_information': Queries that require information from general resources "
+                "(e.g., 'What are the on-campus job opportunities').\n"
+                "   - 'response_construction': Queries that do not require further analysis (e.g., 'Summarize the results').\n"
                 "2. Generate relevant keywords for course description searches:\n"
                 "   - Focus on detailed topics, related technologies, and domain-specific skills.\n"
                 "   - Expand keywords to include synonyms, tools, and techniques used in the field.\n"
@@ -35,7 +38,7 @@ class TaskDetectionAgent:
                 "     - For 'Cloud Computing', generate: ['Cloud Computing', 'AWS', 'Azure', 'GCP', 'Kubernetes', "
                 "'Docker', 'Virtualization', 'Infrastructure-as-a-Service (IaaS)'].\n"
                 "3. Output a JSON with:\n"
-                "   - 'nodes_to_visit': List of nodes to visit ('course_description', 'sql_agent', or both).\n"
+                "   - 'nodes_to_visit': List of nodes to visit ('course_description', 'general_information', 'sql_agent', or both).\n"
                 "   - 'course_description_keywords': List of keywords relevant to course descriptions (if applicable).\n"
                 "   - 'explanation': Brief explanation of the decision."
             ),

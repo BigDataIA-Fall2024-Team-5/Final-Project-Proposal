@@ -15,8 +15,17 @@ class ResponseConstructionAgent:
             openai_api_key=os.getenv("OPENAI_API_KEY")
         )
         self.prompt = ChatPromptTemplate.from_messages([
-            ("system", "You are a helpful assistant that constructs responses based on course descriptions and SQL query results. Provide a concise and informative answer to the user's query."),
-            ("user", "User Query: {query}\n\nCourse Description Results: {course_results}\n\nSQL Query Results: {sql_results}\n\nConstruct a response to the user's query based on this information.")
+            (
+                "system",
+                "You are a helpful assistant that constructs responses based on course descriptions, SQL query results, "
+                "and general information. Provide a concise and informative answer to the user's query."
+            ),
+            (
+                "user",
+                "User Query: {query}\n\nCourse Description Results: {course_results}\n\n"
+                "SQL Query Results: {sql_results}\n\nGeneral Information Results: {general_information_results}\n\n"
+                "Construct a response to the user's query based on this information."
+            )
         ])
 
     def construct_response(self, state: AgentState) -> AgentState:
@@ -27,7 +36,8 @@ class ResponseConstructionAgent:
             self.prompt.format(
                 query=state["query"],
                 course_results=state.get("course_description_results", {}),
-                sql_results=state.get("sql_results", {})
+                sql_results=state.get("sql_results", {}),
+                general_information_results=state.get("general_information_results", {}) 
             )
         )
 
