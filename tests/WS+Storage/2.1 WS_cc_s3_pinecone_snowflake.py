@@ -247,7 +247,6 @@ def add_course_data_to_index(pinecone_index, df):
         try:
             # Prepare chunk content for embedding
             chunk_content = (
-                f"COURSE_CODE: {row['COURSE_CODE']}\n"
                 f"COURSE_NAME: {row['COURSE_NAME']}\n"
                 f"DESCRIPTION: {row['DESCRIPTION']}\n"
             )
@@ -289,9 +288,9 @@ def main(subject_codes):
     insert_data_to_snowflake(df)
     print("Process completed successfully.")
 
-    #pinecone_index = create_index_in_pinecone()
+    pinecone_index = create_index_in_pinecone()
 
-    #add_course_data_to_index(pinecone_index, df)
+    add_course_data_to_index(pinecone_index, df)
 
 # Execute script
 if __name__ == "__main__":

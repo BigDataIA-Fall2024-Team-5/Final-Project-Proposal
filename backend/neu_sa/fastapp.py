@@ -3,6 +3,7 @@ from neu_sa.routers.auth import auth_router
 from neu_sa.routers.user_router import user_router
 from neu_sa.routers.transcript_router import transcript_router
 from neu_sa.routers.task_detection_agent import task_detection_agent
+from neu_sa.routers.task_router import task_router
 from dotenv import load_dotenv
 import os
 import uvicorn
@@ -16,8 +17,9 @@ app = FastAPI()
 # Include routers
 app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 app.include_router(user_router, prefix="/user", tags=["user"])
-app.include_router(task_detection_agent, prefix="/chat", tags=["chat"])
+#app.include_router(task_detection_agent, prefix="/chat", tags=["chat"])
 app.include_router(transcript_router, prefix="/transcripts", tags=["Transcript Processing"])
+app.include_router(task_router, prefix="/chat", tags=["Task Detection and Query"])
 
 # Root endpoint for health check
 @app.get("/")
