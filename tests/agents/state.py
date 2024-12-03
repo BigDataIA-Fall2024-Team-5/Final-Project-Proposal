@@ -7,6 +7,7 @@ class AgentState(TypedDict):
     Represents the state of a task in the graph execution process.
     """
     query: str
+    user_id: int
     messages: Annotated[List[BaseMessage], operator.add]
     nodes_to_visit: List[str]
     course_description_keywords: List[str]
@@ -16,13 +17,18 @@ class AgentState(TypedDict):
     general_information_results: List[Dict[str, Any]]   
     final_response: str
     visited_nodes: List[str]
+    course_prerequisites: List[Dict[str, Any]]
+    user_completed_courses: List[Dict[str, Any]]
+    user_campus: str
+    user_eligibility: List[Dict[str, Any]]
 
-def create_agent_state(query: str) -> AgentState:
+def create_agent_state(query: str, user_id: int) -> AgentState:
     """
     Creates and initializes an AgentState instance.
     """
     return AgentState(
         query=query,
+        user_id=user_id,
         messages=[HumanMessage(content=query)],
         nodes_to_visit=[],
         course_description_keywords=[],
@@ -31,5 +37,8 @@ def create_agent_state(query: str) -> AgentState:
         sql_results=[],
         general_information_results=[], 
         final_response="",
-        visited_nodes=[]
+        visited_nodes=[],
+        user_completed_courses=[],
+        user_campus="",
+        user_eligibility=[]
     )
