@@ -8,7 +8,7 @@ from state import AgentState
 load_dotenv()
 
 class ResponseConstructionAgent:
-    def __init__(self, model="gpt-3.5-turbo"):
+    def __init__(self, model="gpt-4"):
         self.llm = ChatOpenAI(
             model=model,
             temperature=0.5,
@@ -28,29 +28,37 @@ class ResponseConstructionAgent:
                 "       - For general queries (e.g., 'How to enroll in a course'), provide step-by-step guidance or refer to appropriate resources.\n"
                 "\n"
                 "2. **Course Eligibility Validation:**\n"
-                "   - For each course in the 'SQL Query Results', extract the prerequisites and compare them against 'User Completed Courses' Compare it twice and make decision.\n"
-                "   - For each prerequisite:\n"
-                "       - If the prerequisite is found in 'User Completed Courses' with the required grade, mark it as satisfied.\n"
-                "       - If the prerequisite is not found, mark it as not satisfied and explain that the course cannot be taken until the prerequisite is completed.\n"
+                "   - Use 'SQL Query Results' and 'user_course_details' to determine eligibility for courses:\n"
+                "       - For each course in 'SQL Query Results', extract the prerequisites.\n"
+                "       - Compare prerequisites against 'user_course_details', specifically completed courses and grades.\n"
+                "       - Check whether the course is already completed, in progress, or not started.\n"
+                "       - Evaluate progress in related program categories (e.g., core requirements, electives, subject areas) when applicable.\n"
                 "\n"
                 "3. **General Information Responses:**\n"
                 "   - For queries about general university procedures (e.g., enrollment, policies, or services), use 'General Information Results' as the primary source.\n"
                 "   - Provide clear, step-by-step guidance for the user (e.g., 'How to enroll in a course') or direct them to the appropriate resource.\n"
-                "   - Avoid referencing prerequisites or user-specific information unless directly relevant to the general query.\n"
+                "   - Avoid referencing specific courses, prerequisites, or program categories unless directly relevant to the general query.\n"
                 "\n"
-                "4. **Construct Clear Eligibility Statements:**\n"
-                "   - For each course, indicate whether the user is eligible based on completed prerequisites.\n"
+                "4. **Dynamic Adaptation to User Data:**\n"
+                "   - Interpret 'user_course_details' dynamically based on user-specific data. Examples include:\n"
+                "       - Identifying completed courses and their corresponding categories (e.g., core requirements, electives).\n"
+                "       - Checking credits completed in subject areas (e.g., INFO) and elective requirements.\n"
+                "       - Recognizing in-progress courses and ensuring these do not satisfy prerequisites yet.\n"
+                "       - Handling exceptions or additional program rules (e.g., certain courses counting as electives).\n"
+                "\n"
+                "5. **Construct Clear Eligibility Statements:**\n"
+                "   - For each course, indicate whether the user is eligible based on prerequisites and program progress.\n"
                 "   - Avoid requiring the user to manually cross-check their completed courses unless eligibility cannot be fully determined.\n"
                 "\n"
-                "5. **Actionable Recommendations:**\n"
+                "6. **Actionable Recommendations:**\n"
                 "   - For courses where prerequisites are not satisfied, suggest completing the prerequisite courses first.\n"
-                "   - Highlight courses with no prerequisites as options the user can enroll in immediately.\n"
+                "   - Highlight courses with no prerequisites or courses that fit into remaining program requirements as options the user can enroll in immediately.\n"
                 "\n"
-                "6. **Clarity and Relevance:**\n"
+                "7. **Clarity and Relevance:**\n"
                 "   - Focus only on information relevant to the user's query.\n"
                 "   - Avoid including unrelated details or courses not directly tied to the user's query.\n"
                 "\n"
-                "7. **Polite and Professional Tone:**\n"
+                "8. **Polite and Professional Tone:**\n"
                 "   - Ensure responses are polite, professional, and empathetic. Avoid language that may confuse or mislead the user.\n"
             ),
             (
@@ -58,18 +66,11 @@ class ResponseConstructionAgent:
                 "User Query: {query}\n\n"
                 "SQL Query Results: {sql_results}\n\n"
                 "General Information Results: {general_information_results}\n\n"
-                "User Completed Courses: {user_completed_courses}\n\n"
-                "User Campus: {user_campus}\n\n"
-                "User Eligibility Table: {user_eligibility}\n\n"
+                "User Course Details: {user_course_details}\n\n"
                 "Construct a response based on all available information. Use 'General Information Results' for general queries, "
-                "validate eligibility using 'SQL Query Results' and 'User Completed Courses' for course-specific queries, and provide concise, actionable guidance, dont say based on SQL Query Results ."
+                "validate eligibility using 'SQL Query Results' and 'user_course_details' for course-specific queries, and provide concise, actionable guidance without referencing the raw SQL Query Results."
             )
         ])
-
-
-
-
-
 
     def construct_response(self, state: AgentState) -> AgentState:
         print("DEBUG: Executing response construction agent")
@@ -81,9 +82,8 @@ class ResponseConstructionAgent:
                 sql_query=state.get("generated_query",""),
                 sql_results=state.get("sql_results", {}),
                 general_information_results=state.get("general_information_results", {}),
-                user_completed_courses=state.get("user_completed_courses", []),
+                user_course_details=state.get("user_course_details", []),
                 user_campus=state.get("user_campus", ""),
-                user_eligibility=state.get("user_eligibility", [])
             )
         )
 

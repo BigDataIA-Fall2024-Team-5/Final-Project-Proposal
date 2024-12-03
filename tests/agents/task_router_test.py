@@ -102,6 +102,6 @@ def test_runner(query: str,user_id: int):
         print(final_state["final_response"])
 
 if __name__ == "__main__":
-    test_query = ""
+    test_query = "how many credits are pending for me to complete?"
     test_user_id = 1
     test_runner(test_query,test_user_id)

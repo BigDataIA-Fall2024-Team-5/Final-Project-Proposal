@@ -114,12 +114,12 @@ def snowflake_setup():
         create_user_eligibility_table = f"""
         CREATE OR REPLACE TABLE {database_name}.{schema_name}.USER_ELIGIBILITY (
             USER_ID INT NOT NULL,
-            CODE VARCHAR(10) NOT NULL,
+            COURSE_OR_REQUIREMENT VARCHAR(25) NOT NULL,
             ELIGIBLE BOOLEAN, 
-            REASON VARCHAR(500),
+            DETAILS VARCHAR(500),
             STATUS VARCHAR(20) DEFAULT 'PENDING',
             CHECK_DATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (USER_ID, CODE),
+            PRIMARY KEY (USER_ID, COURSE_OR_REQUIREMENT),
             FOREIGN KEY (USER_ID) REFERENCES {database_name}.{schema_name}.USER_PROFILE(USER_ID)
         );
         """

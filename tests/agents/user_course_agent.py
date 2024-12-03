@@ -33,14 +33,6 @@ class UserCourseAgent:
         finally:
             cursor.close()
 
-    def get_user_completed_courses(self, user_id):
-        query = """
-        SELECT course_code, grade
-        FROM USER_COURSES
-        WHERE user_id = %s
-        """
-        return self.db_query(query, (user_id,))
-
     def get_user_campus(self, user_id):
         query = """
         SELECT campus
@@ -51,7 +43,7 @@ class UserCourseAgent:
 
     def get_user_eligibility(self, user_id):
         query = """
-        SELECT CODE, REASON 
+        SELECT COURSE_OR_REQUIREMENT, DETAILS 
         FROM USER_ELIGIBILITY
         WHERE user_id = %s
         """
@@ -60,10 +52,8 @@ class UserCourseAgent:
     def process(self, state: AgentState) -> AgentState:
         user_id = state["user_id"]
         
-          
-        state["user_completed_courses"] = self.get_user_completed_courses(user_id)
         state["user_campus"] = self.get_user_campus(user_id)
-        state["user_eligibility"] = self.get_user_eligibility(user_id)
+        state["user_course_details"] = self.get_user_eligibility(user_id)
 
         state["visited_nodes"].append("user_course_agent")
         state["messages"].append({
