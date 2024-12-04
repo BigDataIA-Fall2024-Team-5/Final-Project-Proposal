@@ -105,12 +105,12 @@ def chunk_and_index_resources(resources_text):
         pc = Pinecone(api_key=PINECONE_API_KEY)
         
         # Create or get index
-        index_name = "graduateresources"
+        index_name = "general-information-index"
         try:
             index = pc.Index(index_name)
         except:
             pc.create_index(
-                    name="graduateresources",
+                    name="general-information-index",
                     dimension=1024,
                     metric='cosine',
                     spec=ServerlessSpec(
@@ -120,9 +120,16 @@ def chunk_and_index_resources(resources_text):
                 )
             index = pc.Index(index_name)
         
+        print("\nChunks before indexing:")
+        print("="*80)
+        
         vectors = []
         for i, text in enumerate(resources_text):
             try:
+                print(f"\nChunk {i}:")
+                print(text)
+                print("-"*40)
+                
                 # Generate embedding
                 embedding = embeddings_client.embed_query(text)
                 

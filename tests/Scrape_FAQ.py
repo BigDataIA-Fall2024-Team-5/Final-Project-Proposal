@@ -123,7 +123,7 @@ def chunk_and_index_faq(faq_text):
         pc = Pinecone(api_key=PINECONE_API_KEY)
         
         # Create or get index
-        index_name = "graduateresources"
+        index_name = "general-information-index"
         try:
             index = pc.Index(index_name)
         except:
