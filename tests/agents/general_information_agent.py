@@ -1,10 +1,12 @@
 import os
-import json
-from pinecone import Pinecone as PineconeClient
 from dotenv import load_dotenv
+from pinecone import Pinecone as PineconeClient
 from langchain_nvidia_ai_endpoints import NVIDIAEmbeddings
-from state import AgentState
+from langchain_core.messages import AIMessage
+from tavily import TavilyClient  # Import Tavily client
+from state import AgentState  # Assuming AgentState is defined elsewhere
 
+# Load environment variables
 load_dotenv()
 
 # Initialize Pinecone Client
@@ -17,42 +19,37 @@ embedding_client = NVIDIAEmbeddings(
     truncate="END"
 )
 
+# Initialize Tavily Client
+tavily_api_key = os.getenv("TAVILY_API_KEY")
+tavily_client = TavilyClient(api_key=tavily_api_key)
+
+
 class GeneralInformationAgent:
     def __init__(self, pinecone_index_name="general-information-index"):
         self.pinecone_index_name = pinecone_index_name
         try:
             self.pinecone_index = pc.Index(self.pinecone_index_name)
-            # Check if the index is accessible
-            info = self.pinecone_index.describe_index_stats()
+            self.pinecone_index.describe_index_stats()  # Validate index connection
+            print(f"DEBUG: Connected to Pinecone index '{self.pinecone_index_name}'.")
         except Exception as e:
             raise RuntimeError(f"Failed to connect to Pinecone index '{self.pinecone_index_name}': {e}")
 
     def generate_embedding(self, query):
         try:
-            embedding = embedding_client.embed_query(query)
-            return embedding
+            print(f"DEBUG: Generating embedding for query: '{query}'")
+            return embedding_client.embed_query(query)
         except Exception as e:
             raise RuntimeError(f"Failed to generate embeddings for query '{query}': {e}")
 
-    def search(self, state: AgentState) -> AgentState:
-
-        print("DEBUG: Executing course descriptions agent") #debug
-        
-        query = state["query"]
-        if not query:
-            return {"error": "Query text is missing."}
+    def search_pinecone(self, query):
         try:
-            # Generate embeddings for the query
+            print("DEBUG: Searching Pinecone...")
             query_embedding = self.generate_embedding(query)
-
-            # Perform search on Pinecone
             search_results = self.pinecone_index.query(
                 vector=query_embedding,
                 top_k=3,
                 include_metadata=True
             )
-
-            # Parse matches
             matches = search_results.to_dict().get("matches", [])
             results = [
                 {
@@ -60,10 +57,80 @@ class GeneralInformationAgent:
                     "score": match.get("score", 0)
                 }
                 for match in matches
-                if match["metadata"].get("text", "").strip() not in ["", "."]
+                if match["metadata"].get("text", "").strip()
             ]
-            state["general_information_results"] = results
-            state["visited_nodes"].append("general_information")
+            print("DEBUG: Pinecone Results:")
+            for result in results:
+                print(f"Text: {result['text']}, Score: {result['score']}")
+            
+            # Apply a relevance threshold
+            threshold = 0.6
+            if results and max(result["score"] for result in results) >= threshold:
+                print("DEBUG: Pinecone results meet the threshold.")
+                return results
+            print("DEBUG: Pinecone results do not meet the threshold.")
+            return []  # Fallback if no relevant results
+        except Exception as e:
+            raise RuntimeError(f"Pinecone search failed: {e}")
+
+    def search_tavily(self, query):
+        try:
+            print("DEBUG: Searching Tavily...")
+            response = tavily_client.search(
+                query=query,
+                include_domains=["northeastern.edu"]  # Restrict search to Northeastern University's domain
+            )
+            if "results" in response and response["results"]:
+                results = [
+                    {
+                        "title": result["title"],
+                        "url": result["url"],
+                        "snippet": result["content"],
+                        "score": result.get("score", 0)
+                    }
+                    for result in sorted(response["results"], key=lambda x: x.get("score", 0), reverse=True)[:3]
+                ]
+                print("DEBUG: Tavily Results:")
+                for result in results:
+                    print(f"Title: {result['title']}, URL: {result['url']}, Snippet: {result['snippet']}, Score: {result['score']}")
+                return results
+            print("DEBUG: No relevant results from Tavily.")
+            return []
+        except Exception as e:
+            raise RuntimeError(f"Tavily search failed: {e}")
+
+    def search(self, state: AgentState) -> AgentState:
+        # Retrieve the generalized description from the state
+        query = state.get("general_description") or state.get("query")
+
+        if not query:
+            return {"error": "Query text is missing."}
+        try:
+            # Pinecone search
+            print(f"General Information query : {query}") #debug
+            pinecone_results = self.search_pinecone(query)
+            if pinecone_results:
+                print("DEBUG: Using Pinecone results.") #debug
+                state["general_information_results"] = pinecone_results
+                state["visited_nodes"].append("general_information_pinecone")
+            else:
+                # Fallback to Tavily
+                print("DEBUG: Falling back to Tavily.")
+                tavily_results = self.search_tavily(query)
+                if tavily_results:
+                    print("DEBUG: Using Tavily results.")
+                    state["general_information_results"] = tavily_results
+                    state["visited_nodes"].append("general_information_tavily")
+                else:
+                    print("DEBUG: No relevant results found from Tavily.")
+                    state["general_information_results"] = []
+                    state["visited_nodes"].append("general_information_no_results")
+
+            # Add results and debug message
+            state["messages"].append(
+                AIMessage(content=f"General information search completed. Results: {state['general_information_results']}").model_dump()
+            )
+
             return state
         except Exception as e:
             return {"error": f"Search failed: {e}"}
