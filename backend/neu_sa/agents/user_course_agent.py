@@ -96,33 +96,3 @@ class UserCourseAgent:
         })
 
         return state
-
-
-def user_course_agent_node(state: AgentState) -> AgentState:
-    agent = UserCourseAgent()
-    return agent.process(state)
-
-# Test function
-def test_user_course_agent():
-    test_query = "What courses am I eligible for in data?"
-    test_user_id = 1
-    state = create_agent_state(test_query, test_user_id)
-    state["course_description_results"] = [
-        {"course_code": "INFO 7250", "course_name": "Engineering of Big-Data Systems"},
-        {"course_code": "INFO 7255", "course_name": "Advanced Big-Data Applications and Indexing Techniques"}
-    ]
-    
-    agent = UserCourseAgent()
-    final_state = agent.process(state)
-
-    print("\n--- User Course Agent Test Results ---")
-    print(f"Query: {test_query}")
-    print(f"User ID: {test_user_id}")
-    print("User Details:")
-    for key, value in final_state.get("user_details", {}).items():
-        print(f"  {key}: {value}")
-    print(f"Visited Nodes: {final_state.get('visited_nodes', [])}")
-    
-if __name__ =="__main__":
-    test_user_course_agent()
-

@@ -12,7 +12,7 @@ task_router = APIRouter()
 # Task router input model
 class TaskQuery(BaseModel):
     query: str
-    history: List[dict] 
+    history: List[dict]
 
 # Inject compiled_graph from the agents module
 def get_graph():
@@ -36,14 +36,7 @@ def process_query(
         user_id=user_id,
         chat_history=task_query.history
     )
-
-    # Convert chat history messages into HumanMessage or AIMessage objects
-    state["messages"] = [
-        HumanMessage(content=msg["content"]) if msg["role"] == "user" else AIMessage(content=msg["content"])
-        for msg in task_query.history
-    ]
-
-    # Process the state through the graph
+    # Process the state through the task detection graph
     final_state = compiled_graph.invoke(state)
 
     # Return the final response

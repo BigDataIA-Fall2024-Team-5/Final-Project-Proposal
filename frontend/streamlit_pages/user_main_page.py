@@ -83,7 +83,7 @@ def user_main_page():
 
             try:
                 # Get the last 5 messages in the chat history
-                history = st.session_state["history"][-5:]
+                history = st.session_state["history"][-4:]
 
                 # Call the FastAPI endpoint using the API_URL from .env
                 response = requests.post(

@@ -20,7 +20,7 @@ class AgentState(TypedDict):
     course_prerequisites: List[Dict[str, Any]]
     user_details: Optional[Dict[str, Any]]
     user_course_details: List[Dict[str, Any]]
-    chat_history: List[Dict[str, str]]  # New field for chat history
+    chat_history: List[Dict[str, str]]
 
 def create_agent_state(query: str, user_id: int, chat_history: Optional[List[Dict[str, str]]] = None) -> AgentState:
     """

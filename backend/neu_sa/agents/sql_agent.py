@@ -17,7 +17,7 @@ class SQLExecutionErrorType(Enum):
     OTHER = "other"
 
 class SQLAgent:
-    def __init__(self, model="gpt-4"):
+    def __init__(self, model="gpt-4-turbo"):
         self.conn = self.snowflake_setup()
         self.llm = ChatOpenAI(model=model, temperature=0)
         self.prompt = ChatPromptTemplate.from_messages([
@@ -59,6 +59,7 @@ class SQLAgent:
             (
                 "user",
                 "User Query: {query}\n\n"
+                "Chat History:\n{chat_history}\n\n"
                 "Database Schema:\n{schema}\n\n"
                 "Relevant Course Codes: {course_codes}\n\n"
                 "Relevant Course Codes are obtained after semantic match with course description.\n"
@@ -104,9 +105,18 @@ class SQLAgent:
             cursor.close()
 
     def db_query(self, query: str):
+        def clean_query(query: str) -> str:
+            # Remove SQL code block markers if they exist
+            if query.startswith("```sql"):
+                query = query[6:]
+            if query.endswith("```"):
+                query = query[:-3]
+            return query.strip()
+
         cursor = self.conn.cursor()
         try:
-            print(query)
+            query = clean_query(query)
+            print(query)  #debug
             cursor.execute(query)
             return cursor.fetchall()
         except Exception as e:
@@ -114,14 +124,16 @@ class SQLAgent:
         finally:
             cursor.close()
 
-    def generate_query(self, user_query: str, schema: str, course_codes: list, user_program_name: str, user_campus: str, user_credits_left: str) -> str:
+
+    def generate_query(self, user_query: str, schema: str, course_codes: list, user_program_name: str, user_campus: str, user_credits_left: str,chat_history:str) -> str:
         response = self.llm.invoke(self.prompt.format(
             query=user_query,
             schema=schema,
             course_codes=", ".join(course_codes),
             user_program_name=user_program_name,
             user_campus=user_campus,
-            user_credits_left=user_credits_left
+            user_credits_left=user_credits_left,
+            chat_history=chat_history,
         ))
         return response.content.strip()
 
@@ -197,13 +209,17 @@ class SQLAgent:
         user_credits_left = user_details.get("credits_left", "N/A")
         user_program_name = user_details.get("program_name", "N/A")
         user_campus = user_details.get("campus", "N/A")
+
+        chat_history = "\n".join(
+            f"{msg['role'].capitalize()}: {msg['content']}" for msg in state["chat_history"]
+        )
         
         schema = self.get_schema()
         course_codes = []
         if state.get("course_description_results"):
             course_codes = [result["course_code"] for result in state["course_description_results"] if result["course_code"] != "Unknown"]
         
-        generated_query = self.generate_query(state["query"], schema, course_codes,user_program_name,user_campus,user_credits_left)
+        generated_query = self.generate_query(state["query"], schema, course_codes,user_program_name,user_campus,user_credits_left,chat_history)
 
         if not generated_query:
             state["sql_results"] = {"error": "No valid query generated to execute."}
@@ -224,22 +240,3 @@ class SQLAgent:
 def sql_agent_node(state: AgentState) -> AgentState:
     agent = SQLAgent()
     return agent.process(state)
-
-def test_sql_agent(query: str):
-    state = create_agent_state(query)
-    state["course_description_results"] = [
-        {"course_code": "INFO 7250", "course_name": "Engineering of Big-Data Systems"},
-        {"course_code": "INFO 7255", "course_name": "Advanced Big-Data Applications and Indexing Techniques"}
-    ]
-    agent = SQLAgent()
-    final_state = agent.process(state)
-
-    print("\n--- SQL Agent Test Results ---")
-    print(f"Query: {query}")
-    print(f"Generated SQL Query: {final_state.get('generated_query', 'N/A')}")
-    print(f"SQL Results: {final_state.get('sql_results', 'N/A')}")
-    print(f"Visited Nodes: {final_state.get('visited_nodes', [])}")
-
-if __name__ == "__main__":
-    test_query = "What instructors we have for DAMG7245 upcoming term"
-    test_sql_agent(test_query)

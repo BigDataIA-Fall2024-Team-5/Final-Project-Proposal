@@ -64,6 +64,8 @@ class GeneralInformationAgent:
             ]
             state["general_information_results"] = results
             state["visited_nodes"].append("general_information")
+
             return state
+        
         except Exception as e:
             return {"error": f"Search failed: {e}"}

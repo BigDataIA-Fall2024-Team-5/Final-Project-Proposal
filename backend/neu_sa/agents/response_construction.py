@@ -8,7 +8,7 @@ from neu_sa.agents.state import AgentState
 load_dotenv()
 
 class ResponseConstructionAgent:
-    def __init__(self, model="gpt-4"):
+    def __init__(self, model="gpt-4o-mini"):
         self.llm = ChatOpenAI(
             model=model,
             temperature=0.5,
@@ -64,6 +64,7 @@ class ResponseConstructionAgent:
             (
                 "user",
                 "User Query: {query}\n\n"
+                "Chat History:\n{chat_history}\n\n"
                 "SQL Query (Dont mention it to user): {sql_query}\n\n"
                 "SQL Query Agent Results: {sql_results}\n\n"
                 "General Information Results: {general_information_results}\n\n"
@@ -94,9 +95,15 @@ class ResponseConstructionAgent:
         user_campus = user_details.get("campus", "N/A")
         user_college = user_details.get("college", "N/A")
 
+        chat_history = "\n".join(
+            f"{msg['role'].capitalize()}: {msg['content']}" for msg in state["chat_history"]
+        )
+
+
         response = self.llm.invoke(
             self.prompt.format(
                 query=state["query"],
+                chat_history=chat_history,
                 user_gpa=user_gpa,
                 user_completed_credits=user_completed_credits,
                 user_credits_left=user_credits_left,
@@ -118,7 +125,3 @@ class ResponseConstructionAgent:
         )
 
         return state
-
-def response_construction_node(state: AgentState) -> AgentState:
-    agent = ResponseConstructionAgent()
-    return agent.construct_response(state)

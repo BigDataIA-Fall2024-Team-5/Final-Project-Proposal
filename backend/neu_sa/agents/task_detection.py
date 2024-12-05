@@ -9,7 +9,7 @@ from neu_sa.agents.state import AgentState
 load_dotenv()
 
 class TaskDetectionAgent:
-    def __init__(self, model="gpt-4"):
+    def __init__(self, model="gpt-4o-mini"):
         self.llm = ChatOpenAI(
             model=model,
             temperature=0,
@@ -18,20 +18,21 @@ class TaskDetectionAgent:
         self.prompt = ChatPromptTemplate.from_messages([
             (
                 "system",
-                "You are a task detection agent responsible for analyzing user queries "
-                "and determining which tools should be used to answer them. Your responsibilities are:\n"
+                "You are a task detection agent responsible for analyzing 'Latest query:' (you must choose nodes_to_visit based on latest query) "
+                "and determining which tools should be used to answer them (user chat history to understand context). Your responsibilities are:\n"
                 "1. Determine which of the following nodes need to be visited:\n"
                 "   - 'course_description': For queries focused on conceptual matches with courses (e.g., 'Suggest me a course with Python').\n"
                 "   - 'sql_agent': For queries requiring precise data retrieval from a SQL database, especially for:\n"
                 "       - Prerequisite and corequisite information for courses (e.g., 'What are the prerequisites for INFO 7110?').\n"
-                "       - Details about specific courses, course code, program, classes ,core , electives (e.g., timings, description, profressors).\n"
+                "       - Details about specific courses, course code, program ,core , electives \n"
                 "       - Check a course if it is core, elective. check program requirements (if its for user then goto user_course_agent after sql_agent)\n"
-                "   - 'user_course_agent': For queries about a specific user's course information, eligibility, or academic history, such as:\n"
-                "       - It gets information about the user (user's enrolled program, completed courses, grade, campus, college, credit requirement for graduation).\n"
+                "       - Check for class timing, class details (e.g., timings, description, profressors). \n"
+                "   - 'user_course_agent': For queries about user's course information, eligibility, or academic history:\n"
+                "       - It has information about the user (user's enrolled program, completed courses, grade, campus, college, credit requirement for graduation).\n"
+                "       - If user ask if he is eligible for a course (Mostly used after sql_agent)\n"
                 "   - 'general_information': Queries that require information from general resources (e.g., 'What are the on-campus job opportunities').\n"
-                "   - 'response_construction': Queries that do not require analysis or data retrieval.\n"
-                "2. Handling queries about course eligibility or prerequisites:\n"
-                "   - First 'sql_agent' to retrieve prerequisite/corequisite Then 'user_course_agent' to check the user's completed courses and academic history.\n"
+                "2. Handling queries about course eligibility or prerequisites: (e.g., Can i take those course, Am i elgilbe to do this)\n"
+                "   - First 'sql_agent' to retrieve prerequisite for the course Then 'user_course_agent' to check the user's completed courses and academic history.\n"
                 "3. Handling queries about user program:\n"
                 "   - First 'user_course_agent' to retrieve user information Then 'sql_agent' to get more information using user details.\n"
                 "4. Generate relevant keywords for course description searches when needed:\n"
@@ -43,6 +44,7 @@ class TaskDetectionAgent:
                 "   - 'nodes_to_visit': List of nodes to visit ('course_description', 'general_information', 'sql_agent', 'user_course_agent', or a combination).\n"
                 "   - 'course_description_keywords': List of keywords relevant to course descriptions (if applicable).\n"
                 "   - 'explanation': Brief explanation of the decision."
+                "user chat history: {chat_history}"
             ),
             ("user", "{query}"),
         ])
@@ -52,8 +54,12 @@ class TaskDetectionAgent:
         
         print("DEBUG: Executing task detection agent") #debug
 
-        input_message = {"query": state["query"]}
+        input_message = {
+            "chat_history": state["chat_history"],
+            "query": state["query"],
+        }
         response = self.prompt | self.llm
+
         try:
             result = response.invoke(input_message)
             result_dict = json.loads(result.content)
@@ -63,7 +69,8 @@ class TaskDetectionAgent:
             state["nodes_to_visit"] = result_dict["nodes_to_visit"]
 
             print(f"DEBUG: task detection agent: {state["nodes_to_visit"]}") #debug
-
+            
+            
             state["visited_nodes"].append("task_detection")
             state["course_description_keywords"].extend(result_dict.get("course_description_keywords", []))
             state["messages"].extend([
