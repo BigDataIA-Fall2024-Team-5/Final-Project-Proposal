@@ -85,8 +85,21 @@ def test_runner(query: str,user_id: int):
         print(final_state["course_description_results"])
     if final_state.get("general_information_results"):
         print("\n--- General Information Results ---")
-        for result in final_state["general_information_results"]:
-            print(f"Score: {result['score']}")
+        results = final_state["general_information_results"]
+        if isinstance(results, list):
+            for result in results:
+                if isinstance(result, dict) and "score" in result:
+                    print(f"Score: {result['score']}")
+                else:
+                    print(f"Invalid result format: {result}")
+        else:
+            print(f"Unexpected format for general information results: {results}")
+
+        print("\n--- General Description ---")
+        if "general_description" in final_state:
+            print(final_state["general_description"])
+        else:
+            print("No general description available.") 
     if final_state.get("sql_results"):
         print("\n--- SQL Query Results ---")
         print(final_state["sql_results"])
@@ -96,12 +109,14 @@ def test_runner(query: str,user_id: int):
     if final_state.get("user_eligibility"):
         print("\n--- user_eligibility ---")
         print(final_state["user_eligibility"])
-
     if final_state.get("final_response"):
         print("\n--- Final Response ---")
         print(final_state["final_response"])
 
 if __name__ == "__main__":
-    test_query = "TELE 7990 is this a core subject for for Telecommunication Networks"
+    #test_query = "Could you tell me the steps to register for courses in nubanner?"
+    #test_query = "Can I take a course that is not on my approved curriculum?"
+    #test_query = "Can tell me a general information if I can take a course that is not on my approved curriculum?"
+    test_query = "What are the on-campus job opportunities?"
     test_user_id = 1
     test_runner(test_query,test_user_id)

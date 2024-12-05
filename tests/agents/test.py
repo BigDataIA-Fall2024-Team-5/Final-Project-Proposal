@@ -1,50 +1,69 @@
-from langgraph.graph import StateGraph, END
+import os
+import json
+from pinecone import Pinecone as PineconeClient
+from dotenv import load_dotenv
+from langchain_nvidia_ai_endpoints import NVIDIAEmbeddings
 from state import AgentState
-from langchain_core.messages import HumanMessage, AIMessage
 
-def task_detection_node(state: AgentState) -> AgentState:
-    from task_detection import TaskDetectionAgent
-    agent = TaskDetectionAgent()
-    return agent.detect_task(state)
+load_dotenv()
 
-def course_description_node(state: AgentState) -> AgentState:
-    from course_description_agent import CourseDescriptionAgent
-    agent = CourseDescriptionAgent()
-    return agent.search(state)
+# Initialize Pinecone Client
+pc = PineconeClient(api_key=os.getenv("PINECONE_API_KEY"))
 
-# Graph Setup for Testing
-graph = StateGraph(AgentState)
-graph.add_node("task_detection", task_detection_node)
-graph.add_node("course_description", course_description_node)
+# Initialize NVIDIA embedding client
+embedding_client = NVIDIAEmbeddings(
+    model="nvidia/nv-embedqa-e5-v5",
+    api_key=os.getenv("NVIDIA_API_KEY"),
+    truncate="END"
+)
 
-graph.set_entry_point("task_detection")
-graph.add_edge("task_detection", "course_description")
-graph.add_edge("course_description", END)
+class GeneralInformationAgent:
+    def __init__(self, pinecone_index_name="general-information-index"):
+        self.pinecone_index_name = pinecone_index_name
+        try:
+            self.pinecone_index = pc.Index(self.pinecone_index_name)
+            # Check if the index is accessible
+            info = self.pinecone_index.describe_index_stats()
+        except Exception as e:
+            raise RuntimeError(f"Failed to connect to Pinecone index '{self.pinecone_index_name}': {e}")
 
-compiled_graph = graph.compile()
+    def generate_embedding(self, query):
+        try:
+            embedding = embedding_client.embed_query(query)
+            return embedding
+        except Exception as e:
+            raise RuntimeError(f"Failed to generate embeddings for query '{query}': {e}")
 
-# Test Runner
-def test_runner(query: str):
-    state = AgentState(query=query)
-    final_state = compiled_graph.invoke(state)
+    def search(self, state: AgentState) -> AgentState:
 
-    print("\n--- Task Execution Results ---")
-    if isinstance(final_state, dict):
-        if 'visited_nodes' in final_state:
-            print(f"Visited Nodes: {final_state['visited_nodes']}")
-        if 'course_description_results' in final_state:
-            print("\n--- Course Description Results ---")
-            print(final_state['course_description_results'])
-        if 'query_type' in final_state:
-            print("\n--- Detected Query Type ---")
-            print(final_state['query_type'])
-        if 'course_description_keywords' in final_state:
-            print("\n--- Course Description Keywords ---")
-            print(final_state['course_description_keywords'])
-    else:
-        print("Unexpected final state type:", type(final_state))
-        print("Final state content:", final_state)
+        print("DEBUG: Executing course descriptions agent") #debug
+        
+        query = state["query"]
+        if not query:
+            return {"error": "Query text is missing."}
+        try:
+            # Generate embeddings for the query
+            query_embedding = self.generate_embedding(query)
 
-if __name__ == "__main__":
-    test_query = "What courses on BigData Analytics are available"
-    test_runner(test_query)
+            # Perform search on Pinecone
+            search_results = self.pinecone_index.query(
+                vector=query_embedding,
+                top_k=3,
+                include_metadata=True
+            )
+
+            # Parse matches
+            matches = search_results.to_dict().get("matches", [])
+            results = [
+                {
+                    "text": match["metadata"].get("text", "No information available"),
+                    "score": match.get("score", 0)
+                }
+                for match in matches
+                if match["metadata"].get("text", "").strip() not in ["", "."]
+            ]
+            state["general_information_results"] = results
+            state["visited_nodes"].append("general_information")
+            return state
+        except Exception as e:
+            return {"error": f"Search failed: {e}"}

@@ -39,10 +39,17 @@ class TaskDetectionAgent:
                 "   - Examples:\n"
                 "     - For 'ML', generate: ['Machine Learning', 'Artificial Intelligence', 'Deep Learning', 'Python', 'TensorFlow'].\n"
                 "     - For 'Cloud Computing', generate: ['Cloud Computing', 'AWS', 'Azure', 'Kubernetes'].\n"
-                "4. Output a JSON with:\n"
+                "5. Generate a concise and generalized description for general_information (RAG-based searches):\n"
+                "- Focus on summarizing the core intent and broader context of the user's query while removing unnecessary specifics.\n" 
+                "- Ensure the description is structured to aid in linking follow-up questions to the original query context.\n" 
+                "- Examples: For 'What are the on-campus job opportunities?', generate:\n" 
+                "- Generalized Description: 'Details about student employment and on-campus job opportunities at Northeastern University.'\n" 
+                "6. Output a JSON with:\n"
                 "   - 'nodes_to_visit': List of nodes to visit ('course_description', 'general_information', 'sql_agent', 'user_course_agent', or a combination).\n"
                 "   - 'course_description_keywords': List of keywords relevant to course descriptions (if applicable).\n"
+                "   - 'general_description': A concise and generalized version of the query that captures its main intent (if applicable).\n"
                 "   - 'explanation': Brief explanation of the decision."
+               
             ),
             ("user", "{query}"),
         ])
@@ -65,6 +72,9 @@ class TaskDetectionAgent:
             print(f"DEBUG: task detection agent: {state["nodes_to_visit"]}") #debug
 
             state["visited_nodes"].append("task_detection")
+            state["general_description"] = result_dict.get("general_description", "")
+            print(f"DEBUG: General description: {state['general_description']}")
+
             state["course_description_keywords"].extend(result_dict.get("course_description_keywords", []))
             state["messages"].extend([
                 HumanMessage(content=state["query"]).model_dump(),
