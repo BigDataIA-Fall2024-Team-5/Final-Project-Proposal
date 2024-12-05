@@ -3,8 +3,8 @@ from dotenv import load_dotenv
 from pinecone import Pinecone as PineconeClient
 from langchain_nvidia_ai_endpoints import NVIDIAEmbeddings
 from langchain_core.messages import AIMessage
-from tavily import TavilyClient  # Import Tavily client
-from state import AgentState  # Assuming AgentState is defined elsewhere
+from tavily import TavilyClient
+from state import AgentState 
 
 # Load environment variables
 load_dotenv()

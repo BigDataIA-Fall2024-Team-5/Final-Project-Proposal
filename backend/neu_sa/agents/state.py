@@ -14,7 +14,8 @@ class AgentState(TypedDict):
     generated_query: str
     course_description_results: List[Dict[str, Any]]
     sql_results: List[Dict[str, Any]]
-    general_information_results: List[Dict[str, Any]]   
+    general_description: str
+    general_information_results: List[Dict[str, Any]]
     final_response: str
     visited_nodes: List[str]
     course_prerequisites: List[Dict[str, Any]]
@@ -35,6 +36,7 @@ def create_agent_state(query: str, user_id: int, chat_history: Optional[List[Dic
         generated_query="",
         course_description_results=[],
         sql_results=[],
+        general_description="",
         general_information_results=[], 
         final_response="",
         visited_nodes=[],
