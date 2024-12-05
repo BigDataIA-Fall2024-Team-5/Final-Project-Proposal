@@ -17,12 +17,12 @@ class ResponseConstructionAgent:
         self.prompt = ChatPromptTemplate.from_messages([
             (
                 "system",
-                "You are a helpful assistant responsible for constructing concise, accurate, and actionable responses based on course descriptions, "
-                "SQL query results, general information, and user-specific course information. Your goal is to evaluate the user's eligibility for courses "
+                "You are the final response agent and helpful assistant responsible for constructing concise, accurate, and actionable responses based on availble infomation, "
+                "SQL query results, general information, and user-specific course information. Your goal is answer the query with available details (like evaluating the user's eligibility for courses "
                 "or provide general guidance based on the query. Follow these rules strictly:\n"
                 "\n"
                 "1. **Query Context Awareness:**\n"
-                "   - Identify the nature of the query (e.g., course eligibility, enrollment procedures, general university policies).\n"
+                "   - Identify the nature of the query (e.g., course eligibility, enrollment procedures, general university policies, course details).\n"
                 "   - Tailor the response to align with the query's context. For example:\n"
                 "       - For eligibility queries, validate prerequisites and provide detailed course-specific recommendations.\n"
                 "       - For general queries (e.g., 'How to enroll in a course'), provide step-by-step guidance or refer to appropriate resources.\n"
@@ -64,10 +64,20 @@ class ResponseConstructionAgent:
             (
                 "user",
                 "User Query: {query}\n\n"
-                "SQL Query Results: {sql_results}\n\n"
+                "SQL Query (Dont mention it to user): {sql_query}\n\n"
+                "SQL Query Agent Results: {sql_results}\n\n"
                 "General Information Results: {general_information_results}\n\n"
-                "User Course Details: {user_course_details}\n\n"
-                "Construct a response based on all available information. Use 'General Information Results' for general queries, "
+                "User Details:\n"
+                "  - GPA: {user_gpa}\n"
+                "  - Completed Credits: {user_completed_credits}\n"
+                "  - Credits Left: {user_credits_left}\n"
+                "  - Program Name: {user_program_name}\n"
+                "  - Campus: {user_campus}\n"
+                "  - College: {user_college}\n\n"
+                "User Course Details: {user_course_details}\n\n (Has details about user enrolled program with all core courses(even if not completed),core option,elective,subject area)"
+                "Course Description Results: {course_description_results}\n\n"
+                "Construct a response based on all available information and which is relavent to user query. Use 'General Information Results' for general queries, "
+                "When a question on a specific program/core/elective other than the users program is asked check sql query and result. if sql result is empty then answer accordingly (mostly no for specified filter from sql query) "
                 "validate eligibility using 'SQL Query Results' and 'user_course_details' for course-specific queries, and provide concise, actionable guidance without referencing the raw SQL Query Results."
             )
         ])
@@ -75,15 +85,29 @@ class ResponseConstructionAgent:
     def construct_response(self, state: AgentState) -> AgentState:
         print("DEBUG: Executing response construction agent")
 
+         # Extract user details or set defaults
+        user_details = state.get("user_details", {}) or {}
+        user_gpa = user_details.get("gpa", "N/A")
+        user_completed_credits = user_details.get("completed_credits", "N/A")
+        user_credits_left = user_details.get("credits_left", "N/A")
+        user_program_name = user_details.get("program_name", "N/A")
+        user_campus = user_details.get("campus", "N/A")
+        user_college = user_details.get("college", "N/A")
+
         response = self.llm.invoke(
             self.prompt.format(
                 query=state["query"],
-                course_results=state.get("course_description_results", {}),
-                sql_query=state.get("generated_query",""),
+                user_gpa=user_gpa,
+                user_completed_credits=user_completed_credits,
+                user_credits_left=user_credits_left,
+                user_program_name=user_program_name,
+                user_campus=user_campus,
+                user_college=user_college,
+                sql_query=state.get("sql_query", {}),
                 sql_results=state.get("sql_results", {}),
                 general_information_results=state.get("general_information_results", {}),
                 user_course_details=state.get("user_course_details", []),
-                user_campus=state.get("user_campus", ""),
+                course_description_results=state.get("course_description_results",[])
             )
         )
 

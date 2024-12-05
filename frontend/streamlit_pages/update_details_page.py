@@ -16,6 +16,13 @@ PROGRAMS = [
     "Data Architecture and Management, MS",
     "Software Engineering Systems, MS",
     "Telecommunication Networks, MS",
+    "Information Systems MSIS-Bridge",
+    "Information Systems MSIS—Bridge—Online",
+    "Information Systems MSIS—Online",
+    "Blockchain and Smart Contract Engineering Graduate Certificate",
+    "Broadband Wireless Systems Graduate Certificate",
+    "IP Telephony Systems Graduate Certificate",
+    "Software Engineering Systems Graduate Certificate",
 ]
 
 PROGRAM_ID_MAP = {
@@ -24,6 +31,13 @@ PROGRAM_ID_MAP = {
     "Data Architecture and Management, MS": "MP_DAM_MS",
     "Software Engineering Systems, MS": "MP_SES_MS",
     "Telecommunication Networks, MS": "MP_TN_MS",
+    "Information Systems MSIS-Bridge": "MP_IS_MSIS_BR",
+    "Information Systems MSIS—Bridge—Online": "MP_IS_MSIS_BRO",
+    "Information Systems MSIS—Online": "MP_IS_MSIS_O",
+    "Blockchain and Smart Contract Engineering Graduate Certificate": "MP_BC_SC_CERT",
+    "Broadband Wireless Systems Graduate Certificate": "MP_BW_CERT",
+    "IP Telephony Systems Graduate Certificate": "MP_IPT_CERT",
+    "Software Engineering Systems Graduate Certificate": "MP_SES_CERT",
 }
 
 CAMPUS_OPTIONS = [
@@ -193,6 +207,7 @@ def update_details_page():
     with profile_col1:
         college = st.selectbox("College", COLLEGES, index=COLLEGES.index(user_profile.get("college", "College of Engineering")))
         program_name = st.selectbox("Program Name", PROGRAMS, index=PROGRAMS.index(user_profile.get("program_name", PROGRAMS[0])))
+        st.caption("After updating program, make sure to save your courses.")
         program_id = PROGRAM_ID_MAP.get(program_name, "Not Provided")
         st.text_input("Program ID", program_id, disabled=True)
 

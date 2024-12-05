@@ -43,7 +43,8 @@ def snowflake_setup():
 
         create_program_requirements_table = f"""
         CREATE OR REPLACE TABLE {database_name}.{schema_name}.PROGRAM_REQUIREMENTS (
-            PROGRAM_ID VARCHAR(10) PRIMARY KEY,
+            PROGRAM_ID VARCHAR(25) PRIMARY KEY,
+            PROGRAM_NAME VARCHAR(100),
             MAX_CREDIT_HOURS INT,
             MIN_GPA FLOAT,
             CORE_CREDIT_REQ INT,
@@ -56,7 +57,7 @@ def snowflake_setup():
 
         create_subject_areas_table = f"""
         CREATE OR REPLACE TABLE {database_name}.{schema_name}.SUBJECT_AREAS (
-            PROGRAM_ID VARCHAR(10) PRIMARY KEY,
+            PROGRAM_ID VARCHAR(25) PRIMARY KEY,
             SUBJECT_CODE VARCHAR(10),
             MIN_CREDIT_HOURS INT
         );
@@ -64,14 +65,14 @@ def snowflake_setup():
 
         create_core_requirements_table = f"""
         CREATE OR REPLACE TABLE {database_name}.{schema_name}.CORE_REQUIREMENTS (
-            PROGRAM_ID VARCHAR(10),
+            PROGRAM_ID VARCHAR(25),
             COURSE_CODE VARCHAR(10),
             PRIMARY KEY (PROGRAM_ID, COURSE_CODE)
         );
         """
         create_core_options_requirements_table = f"""
         CREATE OR REPLACE TABLE {database_name}.{schema_name}.CORE_OPTIONS_REQUIREMENTS (
-            PROGRAM_ID VARCHAR(10),
+            PROGRAM_ID VARCHAR(25),
             COURSE_CODE VARCHAR(10),
             PRIMARY KEY (PROGRAM_ID, COURSE_CODE)
         );
@@ -79,7 +80,7 @@ def snowflake_setup():
 
         create_elective_requirements_table = f"""
         CREATE OR REPLACE TABLE {database_name}.{schema_name}.ELECTIVE_REQUIREMENTS (
-            PROGRAM_ID VARCHAR(10),
+            PROGRAM_ID VARCHAR(25),
             SUBJECT_CODE VARCHAR(10),
             PRIMARY KEY (PROGRAM_ID, SUBJECT_CODE)
         );
@@ -94,8 +95,8 @@ def snowflake_setup():
             COMPLETED_CREDITS INT DEFAULT 0,
             CAMPUS VARCHAR(25),
             COLLEGE VARCHAR(50),
-            PROGRAM_NAME VARCHAR(50),
-            PROGRAM_ID VARCHAR(10),
+            PROGRAM_NAME VARCHAR(100),
+            PROGRAM_ID VARCHAR(25),
             TRANSCRIPT_LINK VARCHAR(100)
         );
         """
@@ -192,10 +193,10 @@ def snowflake_setup():
         #cursor.execute(create_user_courses_table)
         print("USER_COURSES table created.")
 
-        cursor.execute(create_user_eligibility_table)
+        #cursor.execute(create_user_eligibility_table)
         print("USER_ELIGIBILITY table created.")
 
-        #cursor.execute(create_classes_table)
+        cursor.execute(create_classes_table)
         print("CLASSES table created.")
 
         #cursor.execute(create_course_catalog_table)

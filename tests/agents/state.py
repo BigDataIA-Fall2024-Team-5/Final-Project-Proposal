@@ -1,4 +1,4 @@
-from typing import TypedDict, Annotated, List, Dict, Any
+from typing import TypedDict, Annotated, List, Dict, Any, Optional
 from langchain_core.messages import BaseMessage, HumanMessage
 import operator
 
@@ -18,7 +18,7 @@ class AgentState(TypedDict):
     final_response: str
     visited_nodes: List[str]
     course_prerequisites: List[Dict[str, Any]]
-    user_campus: str
+    user_details: Optional[Dict[str, Any]]
     user_course_details: List[Dict[str, Any]]
 
 def create_agent_state(query: str, user_id: int) -> AgentState:
@@ -37,6 +37,6 @@ def create_agent_state(query: str, user_id: int) -> AgentState:
         general_information_results=[], 
         final_response="",
         visited_nodes=[],
-        user_campus="",
+        user_details=None,
         user_course_details=[]
     )

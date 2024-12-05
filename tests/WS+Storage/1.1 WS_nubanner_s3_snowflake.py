@@ -42,36 +42,75 @@ def fetch_class_details(driver, subject_code):
         return {}
 
 def fetch_instructor_meeting_times(driver):
-    """Extract instructor and meeting times."""
+    """Extract instructor and meeting times with labeled classes for multiple entries."""
     try:
         instructor_tab = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "//h3[@id='facultyMeetingTimes']/a"))
         )
         instructor_tab.click()
 
-        meeting_content = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "meeting-faculty"))
-        )
-        instructors = "; ".join(
-            [element.text for element in meeting_content.find_elements(By.CSS_SELECTOR, "span.meeting-faculty-member a")]
+        # Wait for all meeting entries to load
+        meeting_entries = WebDriverWait(driver, 10).until(
+            EC.presence_of_all_elements_located((By.CLASS_NAME, "meeting-faculty"))
         )
 
-        # Extract start and end dates
-        dates = meeting_content.find_element(By.CLASS_NAME, "dates").text
-        start_date, end_date = dates.split(" - ") if " - " in dates else (dates, "")
+        instructors = []  # Collect unique instructor names
+        start_date, end_date = "", ""
+        timing_location_details = []  # Collect all timing and location combinations
 
-        # Extract combined timing and location details
-        timing_location = meeting_content.find_element(By.CLASS_NAME, "right").text
+        for idx, entry in enumerate(meeting_entries, start=1):  # Enumerate entries for labeling
+            try:
+                # Check if the entry is collapsible (has an accordion trigger)
+                expand_button = entry.find_element(By.CLASS_NAME, "accordion-trigger")
+                if expand_button.get_attribute("aria-expanded") == "false":
+                    expand_button.click()
+            except Exception:
+                # If no accordion-trigger is found, assume the entry is expanded
+                pass
+
+            # Check if the Type is "Class"
+            meeting_type_element = entry.find_element(By.XPATH, ".//div[contains(text(), 'Type:')]")
+            meeting_type = meeting_type_element.text.split(":")[-1].strip()
+
+            if meeting_type.lower() == "class":
+                # Extract instructor details (if not already captured)
+                if not instructors:
+                    instructor_elements = entry.find_elements(By.CSS_SELECTOR, "span.meeting-faculty-member a")
+                    instructors = [el.text for el in instructor_elements]
+
+                # Extract dates (if not already captured)
+                if not start_date and not end_date:
+                    dates_element = entry.find_element(By.CLASS_NAME, "dates")
+                    start_date, end_date = dates_element.text.split(" - ") if " - " in dates_element.text else (dates_element.text, "")
+
+                # Extract timing and location
+                timing_location_element = entry.find_element(By.CLASS_NAME, "right")
+                timing_location = timing_location_element.text.strip()
+
+                # Extract days (Class on)
+                class_on_element = entry.find_element(By.CLASS_NAME, "ui-pillbox")
+                class_on = class_on_element.get_attribute("title").replace("Class on: ", "").strip()
+
+
+                # Combine `Class on` with `Timing and Location` and label it
+                labeled_timing_location = f"Class on: {class_on} | {timing_location}"
+                timing_location_details.append(labeled_timing_location)
+
+        # Combine all instructors into a single string and join timing/location details
+        instructors_str = "; ".join(set(instructors))  # Remove duplicates, if any
+        timing_location_combined = " | ".join(timing_location_details)
 
         return {
-            "instructor": instructors,
+            "instructor": instructors_str,
             "start_date": start_date.strip(),
             "end_date": end_date.strip(),
-            "timing_location": timing_location.strip(),
+            "timing_location": timing_location_combined.strip(),
         }
     except Exception as e:
         print(f"Error fetching instructor/meeting times: {e}")
         return {}
+
+
 
 def fetch_enrollment_details(driver):
     """Extract enrollment and waitlist details."""
@@ -291,34 +330,97 @@ def insert_data_to_snowflake_from_s3(s3_key):
     except Exception as e:
         print(f"Error inserting data to Snowflake: {e}")
 
-def collect_all_data():
+def collect_data_by_semester(semester_name, calls):
+    """Collect and store data for a specific semester."""
     all_data = []
-    calls = [
-        ("Spring 2025 Semester", "202530", "Information Systems Program", "INFO"),
-        ("Spring 2025 Semester", "202530", "Data Architecture Management", "DAMG"),
-        ("Spring 2025 Semester", "202530", "Telecommunication Systems", "TELE"),
-        ("Spring 2025 Semester", "202530", "Computer Systems Engineering", "CSYE"),
-        ("Fall 2024 Semester", "202510", "Information Systems Program", "INFO"),
-        ("Fall 2024 Semester", "202510", "Data Architecture Management", "DAMG"),
-        ("Fall 2024 Semester", "202510", "Telecommunication Systems", "TELE"),
-        ("Fall 2024 Semester", "202510", "Computer Systems Engineering", "CSYE"),
-    ]
     for term, term_id, program, subject_code in calls:
         print(f"Starting data collection for: {term}, {program}, {subject_code}")
-        all_data.extend(main(term, term_id, program, subject_code))
+        data = main(term, term_id, program, subject_code)
+        if data:
+            all_data.extend(data)
 
-    # Save data to S3 directly and insert it into Snowflake
+    # Save data to S3 for this semester
     if all_data:
         df = pd.DataFrame(all_data)
-        s3_key = "neu_data/all_classes.csv"
-        
-        # Save directly to S3
+        s3_key = f"neu_data/{semester_name}_classes.csv"
         save_to_s3_in_memory(df, S3_BUCKET_NAME, s3_key)
-        
-        # Insert into Snowflake from S3
-        insert_data_to_snowflake_from_s3(s3_key)
+        print(f"{semester_name} data saved to S3 at {s3_key}.")
 
+
+def merge_all_semesters(file_names):
+    """Merge multiple semester files into one."""
+    merged_data = pd.DataFrame()
+    for file_name in file_names:
+        # Load each file from S3
+        print(f"Loading file: {file_name}")
+        s3_client = boto3.client(
+            's3',
+            aws_access_key_id=AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+            region_name=AWS_REGION
+        )
+        obj = s3_client.get_object(Bucket=S3_BUCKET_NAME, Key=file_name)
+        semester_data = pd.read_csv(obj['Body'])
+        merged_data = pd.concat([merged_data, semester_data], ignore_index=True)
+
+    # Save merged data to S3
+    merged_s3_key = "neu_data/all_classes.csv"
+    save_to_s3_in_memory(merged_data, S3_BUCKET_NAME, merged_s3_key)
+    print(f"Merged data saved to S3 at {merged_s3_key}.")
+    return merged_s3_key
+
+
+def insert_merged_data_to_snowflake():
+    """Insert merged data into Snowflake."""
+    merged_s3_key = "neu_data/all_classes.csv"
+    insert_data_to_snowflake_from_s3(merged_s3_key)
 
 
 if __name__ == "__main__":
-    collect_all_data()
+    # Uncomment and run the semesters you want to collect data for
+    
+    # Collect Fall 2023 Semester data
+    #collect_data_by_semester("Fall_2023", [
+    #    ("Fall 2023 Semester", "202410", "Information Systems Program", "INFO"),
+    #    ("Fall 2023 Semester", "202410", "Data Architecture Management", "DAMG"),
+    #    ("Fall 2023 Semester", "202410", "Telecommunication Systems", "TELE"),
+    #    ("Fall 2023 Semester", "202410", "Computer Systems Engineering", "CSYE"),
+    # ])
+    
+    # Collect Spring 2024 Semester data
+    # collect_data_by_semester("Spring_2024", [
+    #     ("Spring 2024 Semester", "202430", "Information Systems Program", "INFO"),
+    #     ("Spring 2024 Semester", "202430", "Data Architecture Management", "DAMG"),
+    #     ("Spring 2024 Semester", "202430", "Telecommunication Systems", "TELE"),
+    #     ("Spring 2024 Semester", "202430", "Computer Systems Engineering", "CSYE"),
+    # ])
+    
+    # Collect Fall 2024 Semester data
+    #collect_data_by_semester("Fall_2024", [
+    #     ("Fall 2024 Semester", "202510", "Information Systems Program", "INFO"),
+    #     ("Fall 2024 Semester", "202510", "Data Architecture Management", "DAMG"),
+    #     ("Fall 2024 Semester", "202510", "Telecommunication Systems", "TELE"),
+    #     ("Fall 2024 Semester", "202510", "Computer Systems Engineering", "CSYE"),
+    # ])
+    
+    # Collect Spring 2025 Semester data
+    # collect_data_by_semester("Spring_2025", [
+    #     ("Spring 2025 Semester", "202530", "Information Systems Program", "INFO"),
+    #     ("Spring 2025 Semester", "202530", "Data Architecture Management", "DAMG"),
+    #     ("Spring 2025 Semester", "202530", "Telecommunication Systems", "TELE"),
+    #     ("Spring 2025 Semester", "202530", "Computer Systems Engineering", "CSYE"),
+    # ])
+
+    # Merge all semester files into one
+    # Uncomment after all semester data is collected
+     semester_files = [
+         "neu_data/Fall_2023_classes.csv",
+         "neu_data/Spring_2024_classes.csv",
+         "neu_data/Fall_2024_classes.csv",
+         "neu_data/Spring_2025_classes.csv",
+     ]
+     #merged_s3_key = merge_all_semesters(semester_files)
+
+    # Insert merged data into Snowflake
+    # Uncomment after merging
+     insert_merged_data_to_snowflake()

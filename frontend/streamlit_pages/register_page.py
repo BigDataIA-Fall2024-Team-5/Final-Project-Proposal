@@ -51,6 +51,13 @@ def register_page():
         "Data Architecture and Management, MS",
         "Software Engineering Systems, MS",
         "Telecommunication Networks, MS",
+        "Information Systems MSIS-Bridge",
+        "Information Systems MSIS—Bridge—Online",
+        "Information Systems MSIS—Online",
+        "Blockchain and Smart Contract Engineering Graduate Certificate",
+        "Broadband Wireless Systems Graduate Certificate",
+        "IP Telephony Systems Graduate Certificate",
+        "Software Engineering Systems Graduate Certificate",
     ]
     program_name = st.selectbox("Program Name", options=program_options, key="program_name")
 

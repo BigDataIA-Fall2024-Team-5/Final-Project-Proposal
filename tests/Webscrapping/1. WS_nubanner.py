@@ -202,14 +202,23 @@ def main(term, term_id, program, subject_code):
 def collect_all_data():
     all_data = []
     calls = [
-        ("Spring 2025 Semester", "202530", "Information Systems Program", "INFO"),
-        ("Spring 2025 Semester", "202530", "Data Architecture Management", "DAMG"),
-        ("Spring 2025 Semester", "202530", "Telecommunication Systems", "TELE"),
-        ("Spring 2025 Semester", "202530", "Computer Systems Engineering", "CSYE"),
+        ("Fall 2023 Semester", "202410", "Information Systems Program", "INFO"),
+        ("Fall 2023 Semester", "202410", "Data Architecture Management", "DAMG"),
+        ("Fall 2023 Semester", "202410", "Telecommunication Systems", "TELE"),
+        ("Fall 2023 Semester", "202410", "Computer Systems Engineering", "CSYE"),
+        ("Spring 2024 Semester", "202430", "Information Systems Program", "INFO"),
+        ("Spring 2024 Semester", "202430", "Data Architecture Management", "DAMG"),
+        ("Spring 2024 Semester", "202430", "Telecommunication Systems", "TELE"),
+        ("Spring 2024 Semester", "202430", "Computer Systems Engineering", "CSYE"),
         ("Fall 2024 Semester", "202510", "Information Systems Program", "INFO"),
         ("Fall 2024 Semester", "202510", "Data Architecture Management", "DAMG"),
         ("Fall 2024 Semester", "202510", "Telecommunication Systems", "TELE"),
         ("Fall 2024 Semester", "202510", "Computer Systems Engineering", "CSYE"),
+        ("Spring 2025 Semester", "202530", "Information Systems Program", "INFO"),
+        ("Spring 2025 Semester", "202530", "Data Architecture Management", "DAMG"),
+        ("Spring 2025 Semester", "202530", "Telecommunication Systems", "TELE"),
+        ("Spring 2025 Semester", "202530", "Computer Systems Engineering", "CSYE"),
+
     ]
 
     for term, term_id, program, subject_code in calls:

@@ -33,11 +33,26 @@ class UserCourseAgent:
         finally:
             cursor.close()
 
-    def get_user_campus(self, user_id):
+    def get_user_details(self, user_id):
         query = """
-        SELECT campus
-        FROM USER_PROFILE
-        WHERE user_id = %s
+        SELECT 
+            UP.USER_ID,
+            UP.USERNAME,
+            UP.GPA,
+            UP.COMPLETED_CREDITS,
+            PR.MAX_CREDIT_HOURS - UP.COMPLETED_CREDITS AS CREDITS_LEFT,
+            UP.PROGRAM_NAME,
+            UP.CAMPUS,
+            UP.COLLEGE,
+            UP.PROGRAM_ID
+        FROM 
+            USER_PROFILE UP
+        INNER JOIN 
+            PROGRAM_REQUIREMENTS PR
+        ON 
+            UP.PROGRAM_ID = PR.PROGRAM_ID
+        WHERE 
+            UP.USER_ID = %s
         """
         return self.db_query(query, (user_id,))
 
@@ -52,16 +67,36 @@ class UserCourseAgent:
     def process(self, state: AgentState) -> AgentState:
         user_id = state["user_id"]
         
-        state["user_campus"] = self.get_user_campus(user_id)
-        state["user_course_details"] = self.get_user_eligibility(user_id)
+        # Fetch user details and eligibility
+        user_details = self.get_user_details(user_id)
+        eligibility_details = self.get_user_eligibility(user_id)
+
+        # Assuming one user record; store details as a dictionary in state
+        if user_details and isinstance(user_details, list) and len(user_details) > 0:
+            user_details = user_details[0]  # Fetch first result
+            state["user_details"] = {
+                "user_id": user_details[0],
+                "username": user_details[1],
+                "gpa": user_details[2],
+                "completed_credits": user_details[3],
+                "credits_left": user_details[4],
+                "program_name": user_details[5],
+                "campus": user_details[6],
+                "college": user_details[7],
+                "program_id": user_details[8],
+            }
+
+        # Store eligibility details in state
+        state["user_course_details"] = eligibility_details
 
         state["visited_nodes"].append("user_course_agent")
         state["messages"].append({
             "role": "assistant",
-            "content": "User course information retrieved."
+            "content": "User course information retrieved and stored as a dictionary."
         })
 
         return state
+
 
 def user_course_agent_node(state: AgentState) -> AgentState:
     agent = UserCourseAgent()
@@ -83,11 +118,11 @@ def test_user_course_agent():
     print("\n--- User Course Agent Test Results ---")
     print(f"Query: {test_query}")
     print(f"User ID: {test_user_id}")
-    print(f"Course Prerequisites: {final_state.get('course_prerequisites', 'N/A')}")
-    print(f"User Completed Courses: {final_state.get('user_completed_courses', 'N/A')}")
-    print(f"User Campus: {final_state.get('user_campus', 'N/A')}")
-    print(f"User Eligibility: {final_state.get('user_eligibility', 'N/A')}")
+    print("User Details:")
+    for key, value in final_state.get("user_details", {}).items():
+        print(f"  {key}: {value}")
     print(f"Visited Nodes: {final_state.get('visited_nodes', [])}")
-
-if __name__ == "__main__":
+    
+if __name__ =="__main__":
     test_user_course_agent()
+

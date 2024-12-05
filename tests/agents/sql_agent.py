@@ -22,39 +22,56 @@ class SQLAgent:
         self.llm = ChatOpenAI(model=model, temperature=0)
         self.prompt = ChatPromptTemplate.from_messages([
             (
-                "system", 
-                "You are an expert SQL query generator for Snowflake. Your goal is to generate accurate and efficient SQL queries to extract information needed to process the user's request, "
+                "system",
+                "You are an expert SQL query generator for Snowflake. Your goal is to generate SQL queries to extract information to pass to next agent to process the user's request, "
                 "based on the user's question, the provided database schema, and any relevant course codes. Follow these guidelines strictly:\n"
                 "\n"
-                "1. Eligibility and Prequisites Queries: For queries about whether a user can take a course (e.g., 'Can I take DAMG 5342?' or 'what course in data i can take'), your main goal is to:\n"
-                "   a. Retrieve the prerequisites and corequisites for the course from the COURSE_CATALOG table.\n"
-                "   b. Ensure the query includes like course code, prerequisites, corequisites, credits, and subject code.\n"
+                "1. **Eligibility and Prerequisites Queries**: For queries about whether a user can take a course (e.g., 'Can I take DAMG 5342?' or 'what course in data I can take'), your main goal is to:\n"
+                "   a. Retrieve the prerequisites and corequisites for the course from the COURSE_CATALOG table (Include course code, prerequisites, credits).\n"
                 "\n"
-                "2. Seat Availability Queries: Only check the CLASSES table for seat availability if the user explicitly requests this information.\n"
+                "2. **Handling Course/Program/elective/core related Questions**:\n"
+                "   a. Question about specific program (e.g., 'is this(big data, INFO 8922) a core/elective course for MS IS?'), LIST all core/elective courses for the program(Only use 'LIKE' as filter(PROGRAM_NAME LIKE '%IS%'))\n"
+                "      - Format response with ALL CORE or ALL ELECTIVE COURSES FOR THE PROGRAM even if specfic is asked (program name,course name,course code,category)\n"
+                "      - Strictly DO NOT use 'COURSE_NAME' ,'COURSE_CODE' to filter answers AS WE NEED WHOLE LIST.(CHECK THE SQL QUERY TWICE IF IT HAS A FILTER THEN REMOVE IT)"
+                "      - Do NOT use user-specific attributes unless the query is about the user program.\n"
                 "\n"
-                "3. Only Relevant Course Codes: Use the course codes provided in 'Relevant Course Codes' as the primary filter. "
-                "Do not add additional filters like DESCRIPTION matching ('LIKE' clauses) unless relevant course codes is empty.\n"
+                "3. **Use Context Parameters If the query is about user specfic**:\n"
+                "   - User Program Name: Use `{user_program_name}` if query is about the user.\n"
+                "   - User Campus: Use `{user_campus}` (e.g., class schedules for user campus if asked explicitly).\n"
+                "   - User Credits Left: Use `{user_credits_left}` only if needed to answer the user query.\n"
                 "\n"
-                "4. Flexible Course Code Handling: Ensure course codes are formatted correctly (e.g., convert 'INFO4301' to 'INFO 4301').\n"
+                "4. **Seat Availability Queries**: Only check for seat availability if the user explicitly requests available seats.\n"
                 "\n"
-                "5. SQL Query Only: Generate only the SQL query. Do not include explanations, comments, or additional text.\n"
+                "5. **Relevant Course Codes**: Use the course codes provided in 'Relevant Course Codes' as the primary filter. "
+                "Do not add additional filters like DESCRIPTION matching ('LIKE' clauses) unless relevant course codes are empty.\n"
                 "\n"
-                "6.Use the correct term format (e.g., 'Spring 2025 Semester') when querying the CLASSES table. The current term is 'Fall 2024 Semester', "
+                "6. **Flexible Course Code Handling**: Ensure course codes are formatted correctly (e.g., convert 'INFO4301' to 'INFO 4301').\n"
+                "\n"
+                "7. **SQL Query Only**: Generate only the SQL query with the information you have. Do not include explanations, comments, or additional text.\n"
+                "\n"
+                "8. **Term Format**: Use the correct term format (e.g., 'Spring 2025 Semester') when querying the CLASSES table. The current term is 'Fall 2024 Semester', "
                 "and the upcoming term is 'Spring 2025 Semester'.\n"
                 "\n"
-                "7. Avoid Redundancy: Do not add unnecessary filters or conditions that are not directly specified in the user's query. Focus on the provided parameters for filtering.\n"
+                "9. **Avoid Redundancy**: Do not add unnecessary filters or conditions that are not directly specified in the user's query. Focus on the provided parameters for filtering.\n"
                 "\n"
-                "8. Optimize for Performance: Select only the required columns and avoid redundant operations.\n"
+                "10. **Optimize for Performance**: Select only the required columns and avoid redundant operations. \n"
             ),
             (
-                "user", 
+                "user",
                 "User Query: {query}\n\n"
                 "Database Schema:\n{schema}\n\n"
                 "Relevant Course Codes: {course_codes}\n\n"
-                "Generate only the SQL query to answer the user's question. Use the 'Relevant Course Codes' parameter as the main filter if exists for courses. "
-                "Avoid adding unnecessary filters like 'LIKE' clauses for descriptions or filtering by PREREQUISITES IS NULL unless explicitly requested."
+                "Relevant Course Codes are obtained after semantic match with course description.\n"
+                "User Program name: {user_program_name}\n"
+                "User Campus: {user_campus}\n"
+                "User Credits Left: {user_credits_left}\n\n"
+                "Generate only the SQL query to answer the user's question. Use the 'Relevant Course Codes'(generated by semantic match with description) parameter as the main filter if it exists for courses. "
+                "For questions about program/core courses/elective/subject area refer guidelines and strictly follow it(Strictly DO NOT use 'COURSE_NAME' and 'COURSE_CODE' to filter answers. check query thrice only one filter)\n"
+                "- Avoid adding unnecessary filters like 'LIKE' clauses for descriptions or filtering by PREREQUISITES IS NULL unless explicitly requested. "
             )
         ])
+
+
 
         self.tables = [
             "PROGRAM_REQUIREMENTS", "CORE_REQUIREMENTS", "CORE_OPTIONS_REQUIREMENTS",
@@ -97,13 +114,17 @@ class SQLAgent:
         finally:
             cursor.close()
 
-    def generate_query(self, user_query: str, schema: str, course_codes: list) -> str:
+    def generate_query(self, user_query: str, schema: str, course_codes: list, user_program_name: str, user_campus: str, user_credits_left: str) -> str:
         response = self.llm.invoke(self.prompt.format(
             query=user_query,
             schema=schema,
-            course_codes=", ".join(course_codes)
+            course_codes=", ".join(course_codes),
+            user_program_name=user_program_name,
+            user_campus=user_campus,
+            user_credits_left=user_credits_left
         ))
         return response.content.strip()
+
 
     def classify_error(self, error_message: str) -> SQLExecutionErrorType:
         if "syntax error" in error_message.lower():
@@ -169,13 +190,20 @@ class SQLAgent:
 
     def process(self, state: AgentState) -> AgentState:
         print("DEBUG: Executing sql agent")
+
+        # Extract user details or set defaults
+        user_details = state.get("user_details", {}) or {}
+        user_gpa = user_details.get("gpa", "N/A")
+        user_credits_left = user_details.get("credits_left", "N/A")
+        user_program_name = user_details.get("program_name", "N/A")
+        user_campus = user_details.get("campus", "N/A")
         
         schema = self.get_schema()
         course_codes = []
         if state.get("course_description_results"):
             course_codes = [result["course_code"] for result in state["course_description_results"] if result["course_code"] != "Unknown"]
         
-        generated_query = self.generate_query(state["query"], schema, course_codes)
+        generated_query = self.generate_query(state["query"], schema, course_codes,user_program_name,user_campus,user_credits_left)
 
         if not generated_query:
             state["sql_results"] = {"error": "No valid query generated to execute."}

@@ -27,13 +27,14 @@ def fetch_program_requirements(conn, program_id):
     result = cursor.fetchone()
     return {
         "program_id": result[0],
-        "max_credit_hours": result[1],
-        "min_gpa": result[2],
-        "core_credit_req": result[3],
-        "core_options_credit_req": result[4],
-        "elective_credit_req": result[5],
-        "subject_credit_req": result[6],
-        "elective_exceptions": result[7].split(",") if result[7] else [],
+        "program_name": result[1],
+        "max_credit_hours": result[2],
+        "min_gpa": result[3],
+        "core_credit_req": result[4],
+        "core_options_credit_req": result[5],
+        "elective_credit_req": result[6],
+        "subject_credit_req": result[7],
+        "elective_exceptions": result[8].split(",") if result[7] else [],
     }
 
 def fetch_core_requirements(conn, program_id):

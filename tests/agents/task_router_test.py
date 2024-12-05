@@ -57,7 +57,7 @@ graph.add_node("response_construction", response_construction_node)
 graph.set_entry_point("task_detection")
 graph.add_conditional_edges("task_detection", routing_decision, {"course_description", "sql_agent", "user_course", "response_construction"})
 graph.add_conditional_edges("general_information", routing_decision, {"general_information","response_construction"})
-graph.add_conditional_edges("sql_agent", routing_decision, {"course_description","response_construction"})
+graph.add_conditional_edges("sql_agent", routing_decision, {"course_description","user_course_agent","response_construction"})
 graph.add_conditional_edges("user_course_agent", routing_decision, {"sql_agent", "response_construction"})
 graph.add_conditional_edges("course_description", routing_decision, {"sql_agent","response_construction"})
 
@@ -102,6 +102,6 @@ def test_runner(query: str,user_id: int):
         print(final_state["final_response"])
 
 if __name__ == "__main__":
-    test_query = "how many credits are pending for me to complete?"
+    test_query = "TELE 7990 is this a core subject for for Telecommunication Networks"
     test_user_id = 1
     test_runner(test_query,test_user_id)

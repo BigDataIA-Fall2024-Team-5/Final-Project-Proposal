@@ -41,6 +41,13 @@ PROGRAM_ID_MAP = {
     "Data Architecture and Management, MS": "MP_DAM_MS",
     "Software Engineering Systems, MS": "MP_SES_MS",
     "Telecommunication Networks, MS": "MP_TN_MS",
+    "Information Systems MSIS-Bridge": "MP_IS_MSIS_BR",
+    "Information Systems MSIS—Bridge—Online": "MP_IS_MSIS_BRO",
+    "Information Systems MSIS—Online": "MP_IS_MSIS_O",
+    "Blockchain and Smart Contract Engineering Graduate Certificate": "MP_BC_SC_CERT",
+    "Broadband Wireless Systems Graduate Certificate": "MP_BW_CERT",
+    "IP Telephony Systems Graduate Certificate": "MP_IPT_CERT",
+    "Software Engineering Systems Graduate Certificate": "MP_SES_CERT",
 }
 
 VALID_PROGRAM_NAMES = list(PROGRAM_ID_MAP.keys())
