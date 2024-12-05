@@ -82,16 +82,20 @@ def user_main_page():
             st.session_state['history'].append({"role": "user", "content": user_input})
 
             try:
+                # Get the last 5 messages in the chat history
+                history = st.session_state["history"][-5:]
+
                 # Call the FastAPI endpoint using the API_URL from .env
                 response = requests.post(
-                    f"{API_URL}/chat/detect_task",  # Use the dynamic API_URL here
-                    json={"query": user_input},
+                    f"{API_URL}/chat/query", 
+                    headers={"Authorization": f"Bearer {st.session_state['jwt_token']}"},
+                    json={"query": user_input, "history": history},
                 )
 
                 # Check if the request was successful
                 if response.status_code == 200:
                     result = response.json()
-                    assistant_reply = result.get("response", "No response from server.")
+                    assistant_reply = result.get("final_response", "No response from server.")
                 else:
                     assistant_reply = f"Error: {response.status_code}, {response.text}"
 
