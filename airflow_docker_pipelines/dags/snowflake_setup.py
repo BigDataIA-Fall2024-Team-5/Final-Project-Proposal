@@ -209,8 +209,3 @@ def snowflake_setup():
         cursor.close()
         conn.close()
         print("Snowflake connection closed.")
-
-if __name__ == "__main__":
-    print("Starting Snowflake setup...")
-    snowflake_setup()
-    print("Snowflake setup complete.")
