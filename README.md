@@ -125,8 +125,8 @@ AIRFLOW_IMAGE_NAME=sa-image:latest AIRFLOW_UID=0 _AIRFLOW_WWW_USER_USERNAME=admi
 AIRFLOW_IMAGE_NAME=sa-image:latest AIRFLOW_UID=0 _AIRFLOW_WWW_USER_USERNAME=admin _AIRFLOW_WWW_USER_PASSWORD=admin123 AWS_ACCESS_KEY_ID='<YOUR_AWS_ACCESS_KEY>' AWS_SECRET_ACCESS_KEY='<YOUR_AWS_SECRET_KEY>' AWS_REGION='<YOUR_AWS_REGION>' S3_BUCKET_NAME='<YOUR_S3_BUCKET>' SNOWFLAKE_ACCOUNT='<YOUR_SNOWFLAKE_ACCOUNT>' SNOWFLAKE_USER='<YOUR_SNOWFLAKE_USER>' SNOWFLAKE_PASSWORD='<YOUR_SNOWFLAKE_PASSWORD>' SNOWFLAKE_ROLE='<YOUR_SNOWFLAKE_ROLE>' NVIDIA_API_KEY='<YOUR_NVIDIA_API_KEY>' PINECONE_API_KEY='<YOUR_PINECONE_API_KEY>' docker-compose up -d
 ```
 - **Run Pipelines**:
-    - **DAG_scrapenubanner_pipeline**: Automates scraping of semester-wise class details from the NU Banner system and saves the data as CSV files in Amazon S3 for further processing.
-    - **DAG_main_pipeline**: A comprehensive pipeline that:
+    - **DAG_scrapenubanner_pipeline** (collect_and_merge_class_data): Automates scraping of semester-wise class details from the NU Banner system and saves the data as CSV files in Amazon S3 for further processing.
+    - **DAG_main_pipeline** (neu_data_ingestion_and_processing_pipeline): A comprehensive pipeline that:
         - Initializes and sets up Snowflake for data storage.
         - Loads program requirements, class data, and course catalog into Snowflake.
         - Scrapes the course catalog and stores it in Amazon S3, Pinecone, and Snowflake.
