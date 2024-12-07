@@ -247,8 +247,7 @@ def main(term, term_id, program, subject_code):
     return data
 
 # S3 Configuration
-#S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
-S3_BUCKET_NAME = "neu-sa-test"
+S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_REGION = os.getenv("AWS_REGION")

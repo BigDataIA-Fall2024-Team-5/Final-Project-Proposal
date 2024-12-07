@@ -10,6 +10,7 @@ from store_course_catalog_to_pinecone import store_course_catalog_to_pinecone
 from scrape_resources import scrape_resources, chunk_and_index_resources
 from scrape_graduation_Commencement import scrape_graduation_info, chunk_and_index_graduation
 from Scrape_FAQ import scrape_faq, chunk_and_index_faq
+import os
 
 default_args = {
     'owner': 'airflow',
@@ -19,7 +20,7 @@ default_args = {
 
 def scrape_courses(**kwargs):
     subject_codes = ["info", "damg", "tele", "csye", "encp"]
-    bucket_name = "neu-sa-test"
+    bucket_name = os.getenv("S3_BUCKET_NAME")
     s3_key = "neu_data/all_courses.csv"
     df = scrape_and_save_to_s3(subject_codes, bucket_name, s3_key)
     kwargs['ti'].xcom_push(key='course_catalog_df', value=df.to_json())
@@ -55,7 +56,7 @@ def process_faq(**kwargs):
         chunk_and_index_faq(faq_text)
         
 with DAG(
-    'neu_data_processing_and_indexing_dag',
+    'neu_data_ingestion_and_processing_pipeline',
     default_args=default_args,
     description='DAG to setup Snowflake, load course catalog, process university resources, and index in Pinecone',
     schedule_interval=None,
@@ -114,7 +115,6 @@ with DAG(
         provide_context=True
     )
 
-    # Define task dependencies
     # Define task dependencies
     setup_snowflake_task >> load_program_requirements_task >> load_classes_data_task
     load_classes_data_task >> scrape_course_catalog_task >> load_course_catalog_to_snowflake_task >> store_course_catalog_to_pinecone_task
