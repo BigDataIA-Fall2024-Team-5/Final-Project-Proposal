@@ -26,7 +26,7 @@ class TaskDetectionAgent:
                 "       - Prerequisite and corequisite information for courses (e.g., 'What are the prerequisites for INFO 7110?').\n"
                 "       - Details about specific courses, course code, program ,core , electives \n"
                 "       - Check a course if it is core, elective. check program requirements (if its for user then goto user_course_agent after sql_agent)\n"
-                "       - Check for class timing, class details (e.g., timings, description, profressors). \n"
+                "       - Check for class timing, class details specific to campus locations (e.g., timings, description, profressors). \n"
                 "   - 'user_course_agent': For queries about user's course information, eligibility, or academic history:\n"
                 "       - It has information about the user (user's enrolled program, completed courses, grade, campus, college, credit requirement for graduation).\n"
                 "       - If user ask if he is eligible for a course (Mostly used after sql_agent)\n"
