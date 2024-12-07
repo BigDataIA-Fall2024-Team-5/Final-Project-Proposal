@@ -95,7 +95,7 @@ This project enhances the student experience by reducing the time spent navigati
 
 ### Prerequisites
 - **Docker & Docker Compose**: Required for containerization.
-- **Python 3.11**: Ensure compatibility with Python 3.11.
+- **Python 3.11**: Ensure compatibility with Python 3.11 (>=3.11,<3.13).
 - **API Credentials**: Set up AWS, Snowflake, NVIDIA, Pinecone, Tavily and OpenAI credentials in the `.env` file.
 - **Poetry**: Required for dependency management.
 

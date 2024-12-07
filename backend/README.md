@@ -5,7 +5,7 @@ The backend of the **NEU-SAC** platform is a FastAPI-based application that serv
 ## How to Run the Backend
 
 ### Prerequisites
-1. **Python 3.11**: Ensure you have Python 3.11 installed.
+1. **Python 3.11**: Ensure you have Python 3.11 installed (>=3.11,<3.13).
 2. **Poetry**: Install Poetry for dependency management.
 3. **Environment Variables**: Ensure a `.env` file is present with the necessary keys (check below).
 ```
