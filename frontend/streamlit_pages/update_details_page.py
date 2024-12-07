@@ -8,6 +8,14 @@ import os
 load_dotenv()
 API_URL = os.getenv("BACKEND_URL")  # Backend API URL
 
+def handle_session_expiration():
+    """
+    Check response for session expiration and display the expiration page if token has expired.
+    """
+    st.session_state.clear()
+    st.session_state["page"] = "expiration_page"
+    st.rerun()
+
 # Predefined dropdown options
 COLLEGES = ["College of Engineering"]
 PROGRAMS = [
@@ -59,6 +67,8 @@ def fetch_user_data(user_id, jwt_token):
             f"{API_URL}/user/{user_id}",
             headers={"Authorization": f"Bearer {jwt_token}"}
         )
+        if response.status_code == 401:
+            handle_session_expiration()
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
@@ -73,6 +83,8 @@ def fetch_transcript_link(user_id, jwt_token):
 
         if response.status_code == 200:
             return response.json().get("transcript_presigned_url")
+        elif response.status_code == 401:
+                handle_session_expiration()
         elif response.status_code == 404:
             return None  # No transcript found
         else:
@@ -103,9 +115,10 @@ def upload_transcript(file, user_id, jwt_token):
             data=data,
             headers=headers,
         )
-
+        if response.status_code == 401:
+            handle_session_expiration()
         # Handle response status
-        if response.status_code != 200:
+        elif response.status_code != 200:
             st.error(f"Failed to upload transcript: {response.json().get('detail', 'Unknown error occurred.')}")
             return None
 
@@ -124,6 +137,8 @@ def save_courses_to_snowflake(user_id, courses, jwt_token):
             json=courses,
             headers={"Authorization": f"Bearer {jwt_token}"}
         )
+        if response.status_code == 401:
+            handle_session_expiration()
 
         # Raise an exception for HTTP error responses
         response.raise_for_status()
@@ -138,7 +153,9 @@ def save_courses_to_snowflake(user_id, courses, jwt_token):
 
     except requests.exceptions.HTTPError as e:
         # Parse backend error message
-        if response.status_code == 400:  # Bad Request
+        if response.status_code == 401:
+            handle_session_expiration()
+        elif response.status_code == 400:
             error_detail = response.json().get("detail", "Unknown error occurred.")
             st.session_state["save_courses_error"] = error_detail  # Store detailed error in session state
             st.error(f"Error saving courses: {error_detail}")
@@ -161,6 +178,8 @@ def save_profile_to_snowflake(user_id, user_profile, jwt_token):
             json=user_profile,
             headers={"Authorization": f"Bearer {jwt_token}"}
         )
+        if response.status_code == 401:
+            handle_session_expiration()
         response.raise_for_status()
         st.success("Profile updated successfully!")
         return response.json()
