@@ -8,24 +8,28 @@ import pandas as pd
 load_dotenv()
 API_URL = os.getenv("BACKEND_URL")
 
+def handle_session_expiration():
+    """
+    Check response for session expiration and display the expiration page if token has expired.
+    """
+    st.session_state.clear()
+    st.session_state["page"] = "expiration_page"
+    st.rerun()
+
 def fetch_user_data(user_id, jwt_token):
     """
     Fetch user data from the backend API.
-    
-    Args:
-        user_id (str): The ID of the user.
-        jwt_token (str): The JWT token for authentication.
-    
-    Returns:
-        dict: The user data as JSON if the request is successful; otherwise None.
     """
     try:
         response = requests.get(
             f"{API_URL}/user/{user_id}",
             headers={"Authorization": f"Bearer {jwt_token}"}
         )
+        if response.status_code == 401:  
+            handle_session_expiration()
         response.raise_for_status()  # Raise an exception for HTTP errors
         return response.json()
+        
     except requests.exceptions.RequestException as e:
         st.error(f"Error fetching user data: {e}")
         return None
@@ -91,9 +95,10 @@ def user_main_page():
                     headers={"Authorization": f"Bearer {st.session_state['jwt_token']}"},
                     json={"query": user_input, "history": history},
                 )
-
+                if response.status_code == 401:  
+                    handle_session_expiration()
                 # Check if the request was successful
-                if response.status_code == 200:
+                elif response.status_code == 200:
                     result = response.json()
                     assistant_reply = result.get("final_response", "No response from server.")
                 else:

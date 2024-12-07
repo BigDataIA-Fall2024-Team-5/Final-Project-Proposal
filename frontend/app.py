@@ -3,6 +3,7 @@ from streamlit_pages.login_page import login_page
 from streamlit_pages.register_page import register_page
 from streamlit_pages.user_main_page import user_main_page
 from streamlit_pages.update_details_page import update_details_page
+from streamlit_pages.expiration_page import expiration_page
 
 # Set the page layout to wide mode
 st.set_page_config(page_title="NEU-SA", page_icon="📚", layout="wide")  # This must be the first Streamlit command
@@ -30,6 +31,8 @@ elif st.session_state["page"] == "user_main_page":
     user_main_page()
 elif st.session_state["page"] == "update_details_page":
     update_details_page()
+elif st.session_state["page"] == "expiration_page":
+    expiration_page()
 else:
     st.error("Page not found. Redirecting to login.")
     navigate_to("login_page")
