@@ -7,6 +7,9 @@ from load_classes_data import insert_merged_data_to_snowflake
 from scrape_course_catalog import scrape_and_save_to_s3
 from load_course_catalog_to_snowflake import load_course_catalog_to_snowflake
 from store_course_catalog_to_pinecone import store_course_catalog_to_pinecone
+from scrape_resources import scrape_resources, chunk_and_index_resources
+from scrape_graduation_Commencement import scrape_graduation_info, chunk_and_index_graduation
+from Scrape_FAQ import scrape_faq, chunk_and_index_faq
 
 default_args = {
     'owner': 'airflow',
@@ -36,10 +39,25 @@ def store_courses_in_pinecone(**kwargs):
     df = pd.read_json(df_json)
     store_course_catalog_to_pinecone(df,index_name)
 
+def process_resources(**kwargs):
+    resources_text = scrape_resources()
+    if resources_text:
+        chunk_and_index_resources(resources_text)
+
+def process_graduation_info(**kwargs):
+    sections = scrape_graduation_info()
+    if sections:
+        chunk_and_index_graduation(sections)
+
+def process_faq(**kwargs):
+    faq_text = scrape_faq()
+    if faq_text:
+        chunk_and_index_faq(faq_text)
+        
 with DAG(
-    'snowflake_setup_and_load_data_dag',
+    'neu_data_processing_and_indexing_dag',
     default_args=default_args,
-    description='DAG to setup Snowflake, load course catalog, and store in Pinecone',
+    description='DAG to setup Snowflake, load course catalog, process university resources, and index in Pinecone',
     schedule_interval=None,
     start_date=datetime(2024, 12, 5),
     catchup=False,
@@ -78,6 +96,26 @@ with DAG(
         provide_context=True
     )
 
+    process_resources_task = PythonOperator(
+        task_id='process_resources',
+        python_callable=process_resources,
+        provide_context=True
+    )
+
+    process_graduation_info_task = PythonOperator(
+        task_id='process_graduation_info',
+        python_callable=process_graduation_info,
+        provide_context=True
+    )
+
+    process_faq_task = PythonOperator(
+        task_id='process_faq',
+        python_callable=process_faq,
+        provide_context=True
+    )
+
+    # Define task dependencies
+    # Define task dependencies
     setup_snowflake_task >> load_program_requirements_task >> load_classes_data_task
     load_classes_data_task >> scrape_course_catalog_task >> load_course_catalog_to_snowflake_task >> store_course_catalog_to_pinecone_task
-
+    process_resources_task >> process_graduation_info_task >> process_faq_task

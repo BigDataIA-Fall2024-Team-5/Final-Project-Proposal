@@ -7,7 +7,7 @@ USER root
 # Set environment variable to avoid interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Update package lists and install dependencies
+# Update package lists and install required dependencies for Chrome
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     unzip \
@@ -55,20 +55,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libvulkan1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Download and install Google Chrome (specific version)
+# Download and install a specific version of Google Chrome
 RUN wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_130.0.6723.58-1_amd64.deb \
-    && apt-get update \
-    && apt-get install -y ./google-chrome-stable_130.0.6723.58-1_amd64.deb \
+    && dpkg -i google-chrome-stable_130.0.6723.58-1_amd64.deb || apt-get -f install -y \
     && rm google-chrome-stable_130.0.6723.58-1_amd64.deb
 
-# Install ChromeDriver (specific version matching Google Chrome)
+# Download and install ChromeDriver matching the installed Chrome version
 RUN wget https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/130.0.6723.58/linux64/chromedriver-linux64.zip \
     && unzip chromedriver-linux64.zip \
     && mv chromedriver-linux64/chromedriver /usr/local/bin/ \
     && chmod +x /usr/local/bin/chromedriver \
     && rm -rf chromedriver-linux64 chromedriver-linux64.zip
 
-# Clean up cached files to reduce image size
+# Clean up unnecessary files to reduce image size
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Switch back to airflow user and working directory
