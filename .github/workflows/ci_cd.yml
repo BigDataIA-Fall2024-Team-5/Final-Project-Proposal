@@ -1,0 +1,94 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.11'
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          poetry config virtualenvs.create false
+
+      - name: Install Dependencies
+        run: poetry install
+
+      - name: Run Tests
+        run: poetry run pytest
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+          SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Airflow Image
+        uses: docker/build-push-action@v2
+        with:
+          context: ./airflow_docker_pipelines
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/neu-sa-airflow:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/neu-sa-airflow:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/neu-sa-airflow:buildcache,mode=max
+
+## Required GitHub Secrets
+
+Add these secrets in your GitHub repository settings (Settings > Secrets and variables > Actions):
+
+1. AWS Credentials:
+   - AWS_ACCESS_KEY_ID
+   - AWS_SECRET_ACCESS_KEY
+   - AWS_REGION
+
+2. Snowflake Credentials:
+   - SNOWFLAKE_ACCOUNT
+   - SNOWFLAKE_USER
+   - SNOWFLAKE_PASSWORD
+   - SNOWFLAKE_ROLE
+
+3. API Keys:
+   - NVIDIA_API_KEY
+   - PINECONE_API_KEY
+   - OPENAI_API_KEY
+
+4. Docker Hub Credentials:
+   - DOCKERHUB_USERNAME
+   - DOCKERHUB_TOKEN
+
+The workflow will:
+1. Run tests whenever code is pushed to main or a pull request is created
+2. Build and push the Airflow Docker image if tests pass
+3. Use caching to speed up builds
+4. Ensure all dependencies are properly installed using Poetry
