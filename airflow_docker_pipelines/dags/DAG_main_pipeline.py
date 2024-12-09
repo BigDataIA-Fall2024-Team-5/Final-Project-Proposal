@@ -33,7 +33,7 @@ def load_courses_to_snowflake(**kwargs):
     load_course_catalog_to_snowflake(df)
 
 def store_courses_in_pinecone(**kwargs):
-    index_name = "course-catalog-index-test"
+    index_name = "course-catalog-index"
     import pandas as pd
     ti = kwargs['ti']
     df_json = ti.xcom_pull(key='course_catalog_df')
