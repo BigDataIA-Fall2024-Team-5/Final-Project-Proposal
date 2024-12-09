@@ -18,9 +18,9 @@ def navigate_to(page_name):
     st.rerun()  # Trigger rerun to navigate to the new page
     
 # Display session state for debugging
-st.sidebar.header("Debugging Info")
-st.sidebar.write("Session State:")
-st.sidebar.write(st.session_state)
+#st.sidebar.header("Debugging Info")
+#st.sidebar.write("Session State:")
+#st.sidebar.write(st.session_state)
 
 # Navigation logic with a fallback
 if st.session_state["page"] == "login_page":

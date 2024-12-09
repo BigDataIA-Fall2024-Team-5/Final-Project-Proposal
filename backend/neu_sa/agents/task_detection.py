@@ -74,7 +74,7 @@ class TaskDetectionAgent:
             
             state["nodes_to_visit"] = result_dict["nodes_to_visit"]
 
-            print(f"DEBUG: task detection agent: {state["nodes_to_visit"]}") #debug
+            print(f"DEBUG: task detection agent: {state['nodes_to_visit']}") #debug
             
             
             state["visited_nodes"].append("task_detection")
