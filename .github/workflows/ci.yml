@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [backend, airflow_docker_pipelines]
+        service: [backend, airflow_docker_pipelines, frontend]
 
     steps:
       - name: Checkout Code
@@ -22,8 +22,10 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install Poetry
+      - name: Install curl and Poetry
         run: |
+          sudo apt-get update
+          sudo apt-get install -y curl
           curl -sSL https://install.python-poetry.org | python3 -
         env:
           PATH: ${{ runner.env.PATH }}:/home/runner/.local/bin
@@ -44,7 +46,6 @@ jobs:
         run: |
           cd airflow_docker_pipelines
           poetry run pytest Unit_Tests --disable-warnings
-
 
   build-and-push-docker-images:
     runs-on: ubuntu-latest
