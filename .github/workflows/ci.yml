@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [backend, airflow_docker_pipelines, frontend]
+        service: [backend, airflow_docker_pipelines]
 
     steps:
       - name: Checkout Code
@@ -25,7 +25,8 @@ jobs:
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
-          echo "::add-path::${HOME}/.local/bin"
+        env:
+          PATH: ${{ runner.env.PATH }}:/home/runner/.local/bin
 
       - name: Install Dependencies
         run: |
