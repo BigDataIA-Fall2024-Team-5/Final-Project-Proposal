@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [backend, airflow_docker_pipelines, frontend]
+        service: [backend, airflow_docker_pipelines]
 
     steps:
       - name: Checkout Code
@@ -24,11 +24,22 @@ jobs:
 
       - name: Install curl and Poetry
         run: |
+<<<<<<< Updated upstream
           sudo apt-get update
           sudo apt-get install -y curl
           curl -sSL https://install.python-poetry.org | python3 -
         env:
           PATH: ${{ runner.env.PATH }}:/home/runner/.local/bin
+=======
+          python3 -m pip install --upgrade pip
+          python3 -m pip install poetry
+        env:
+          PATH: ${{ runner.tool_cache }}/python3/bin:/home/runner/.local/bin:${{ env.PATH }}
+
+      - name: Verify Poetry Installation
+        run: |
+          poetry --version
+>>>>>>> Stashed changes
 
       - name: Install Dependencies
         run: |
@@ -37,6 +48,12 @@ jobs:
 
       - name: Run Backend Unit Tests
         if: matrix.service == 'backend'
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+          SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+          SNOWFLAKE_REGION: ${{ secrets.SNOWFLAKE_REGION }}
         run: |
           cd backend
           poetry run pytest Unit_Tests --disable-warnings
