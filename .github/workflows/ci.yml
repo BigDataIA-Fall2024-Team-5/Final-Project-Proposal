@@ -22,15 +22,8 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install curl and Poetry
+      - name: Install Poetry
         run: |
-<<<<<<< Updated upstream
-          sudo apt-get update
-          sudo apt-get install -y curl
-          curl -sSL https://install.python-poetry.org | python3 -
-        env:
-          PATH: ${{ runner.env.PATH }}:/home/runner/.local/bin
-=======
           python3 -m pip install --upgrade pip
           python3 -m pip install poetry
         env:
@@ -39,7 +32,6 @@ jobs:
       - name: Verify Poetry Installation
         run: |
           poetry --version
->>>>>>> Stashed changes
 
       - name: Install Dependencies
         run: |
