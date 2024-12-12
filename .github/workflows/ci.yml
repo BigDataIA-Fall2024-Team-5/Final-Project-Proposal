@@ -26,12 +26,6 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install poetry
-        env:
-          PATH: ${{ runner.tool_cache }}/python3/bin:/home/runner/.local/bin:${{ env.PATH }}
-
-      - name: Verify Poetry Installation
-        run: |
-          poetry --version
 
       - name: Install Dependencies
         run: |
@@ -45,7 +39,12 @@ jobs:
           SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
           SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
           SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
-          SNOWFLAKE_REGION: ${{ secrets.SNOWFLAKE_REGION }}
+          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+          SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+          SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
+          TEST_USERNAME: ${{ secrets.TEST_USERNAME }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+          TEST_JWT_TOKEN: ${{ secrets.TEST_JWT_TOKEN }}
         run: |
           cd backend
           poetry run pytest Unit_Tests --disable-warnings
