@@ -3,15 +3,15 @@
 
 ## Links
 - **Project Proposal**: [[CodeLabs](https://codelabs-preview.appspot.com/?file_id=1bf-PQCwhOEHs6vVuYpJwY-ejyBHMTnJIuw2xpblkg0A#0)] 
-- **Final CodeLab**: [[CodeLabs]( )] [[Google Drive Link]( )] [[Github Location]( )]
+- **Documentation**: [[CodeLabs](https://codelabs-preview.appspot.com/?file_id=1l_c0ABmxwoJdVp1SIEWD18la2tOFyov11pGCn7RLltM#0)] [[Google Drive Doc](https://docs.google.com/document/d/1l_c0ABmxwoJdVp1SIEWD18la2tOFyov11pGCn7RLltM/edit?usp=sharing)] [[Github Location](/docs/document.md)]
 - **Presentation**: [[Google Drive]( )]
 - **Deployed FastAPI**: [[FastAPI Service]( )]
 - **Deployed Streamlit**: [[Streamlit App]( )]
-- **Docker Repository**: [[DockerHub](https://hub.docker.com/repositories/dharunramaraj)]
+- **Docker Repository**: [[DockerHub](https://hub.docker.com/repositories/dharunramaraj)] neu-sa-frontend , neu-sa-backend
 - **GitHub Project**: [[GitHub](https://github.com/orgs/BigDataIA-Fall2024-Team-5/projects/13)]
 
 ## Architecture Diagram
-![image]( )
+![image](/docs/NEU-SA-Architecture.png)
 
 
 ## Table of Contents
