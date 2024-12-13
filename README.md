@@ -4,7 +4,7 @@
 ## Links
 - **Project Proposal**: [[CodeLabs](https://codelabs-preview.appspot.com/?file_id=1bf-PQCwhOEHs6vVuYpJwY-ejyBHMTnJIuw2xpblkg0A#0)] 
 - **Documentation**: [[CodeLabs](https://codelabs-preview.appspot.com/?file_id=1l_c0ABmxwoJdVp1SIEWD18la2tOFyov11pGCn7RLltM#0)] [[Google Drive Doc](https://docs.google.com/document/d/1l_c0ABmxwoJdVp1SIEWD18la2tOFyov11pGCn7RLltM/edit?usp=sharing)] [[Github Location](/docs/document.md)]
-- **Presentation**: [[Google Drive]( )]
+- **Presentation**: [[Google Drive](https://drive.google.com/file/d/1Qgs-N__P2gj_6Y5xT2kFV_ig9k6UMXPx/view?usp=sharing)]
 
 - **Deployed FastAPI**: [[FastAPI Service](http://34.74.210.110:8000/ )]
 - **Deployed Streamlit**: [[Streamlit App](http://34.74.210.110:8501/)]
