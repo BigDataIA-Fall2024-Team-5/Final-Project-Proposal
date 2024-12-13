@@ -32,7 +32,7 @@
     - [Web Scraping](#web-scraping)
     - [Transcript Processing](#transcript-processing)
     - [Eligibility Table Update](#eligibility-table-update)
-13. [CI/CD](#CI/CD)
+13. [CI/CD](#cicd-pipeline)
 14. [Project Timeline](#project-timeline)
     - [Phase 1: Foundation Setup](#phase-1-foundation-setup-november-24---november-30-2024)
     - [Phase 2: Core Agent Development](#phase-2-core-agent-development-december-1---december-5-2024)
@@ -666,6 +666,53 @@ The `USER_ELIGIBILITY` table is populated by processing the `USER_COURSES` data 
 
 ### Output: Generated `USER_ELIGIBILITY` Entries  
 ![Placeholder for USER_ELIGIBILITY Table Entries](/docs/user_eligibility.png)
+
+# CI/CD Pipeline
+
+This CI/CD pipeline uses **GitHub Actions** to automate testing, building, and deploying the NEU-SAC application. It ensures that changes pushed to the `main` branch are tested, containerized, and deployed to **Google Cloud Platform (GCP)**.
+
+## Workflow Trigger
+
+The pipeline runs automatically:
+- When code is pushed to the `main` branch.
+- When a pull request is opened for the `main` branch.
+
+## Key Pipeline Steps
+
+### 1. Testing
+- Tests the **backend** and **airflow_docker_pipelines** services.
+- Steps involved:
+  - **Check out the code:** Clones the repository to the GitHub Actions runner.
+  - **Set up Python 3.12:** Ensures the correct Python environment is available.
+  - **Install dependencies:** Uses **Poetry** to install all required libraries.
+  - **Run unit tests:** Executes tests with **pytest** to validate the application.
+
+### 2. Building Docker Images
+- Builds Docker images for:
+  - **Backend**
+  - **Airflow Docker Pipelines**
+  - **Frontend**
+- Steps involved:
+  - Builds images using **Docker** with versioning tags based on the Git commit hash or branch name.
+  - Pushes the built images to **Docker Hub** for easy access and deployment.
+
+### 3. Deployment to GCP
+- Connects to the GCP Virtual Machine using **SSH**.
+- Deployment process:
+  - Pulls the latest Docker images from **Docker Hub**.
+  - Stops any running containers for the services being updated.
+  - Deploys updated services with the pulled Docker images.
+  - Configures the backend to run on port `8000` and the frontend to run on port `8501`.
+  - Injects all necessary environment variables securely from **GitHub Secrets**.
+
+---
+
+## Advantages of the Pipeline
+
+- **Automation:** Eliminates manual intervention for testing, building, and deploying, ensuring consistency and reducing errors.
+- **Efficiency:** Ensures only tested and containerized code is deployed to production.
+- **Security:** Environment variables and sensitive credentials are securely managed through **GitHub Secrets**.
+- **Scalability:** Can easily extend to include additional services or environments as the application evolves.
 
 
 # Project Timeline
