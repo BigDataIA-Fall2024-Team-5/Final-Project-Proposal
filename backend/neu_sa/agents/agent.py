@@ -37,9 +37,10 @@ def response_construction_node(state: AgentState) -> AgentState:
     return agent.construct_response(state)
 
 def routing_decision(state: AgentState):
-    if state["nodes_to_visit"]:
-        print(f"Routing logic: {state['nodes_to_visit']}")
-        next_node = state["nodes_to_visit"].pop(0)
+    nodes = state.get("nodes_to_visit", [])
+    if isinstance(nodes, list) and nodes:
+        print(f"Routing logic: {nodes}")
+        next_node = nodes.pop(0)
         return next_node
     return "response_construction"
 
