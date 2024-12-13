@@ -8,10 +8,10 @@ from neu_sa.agents.state import AgentState
 load_dotenv()
 
 class ResponseConstructionAgent:
-    def __init__(self, model="gpt-4o-mini"):
+    def __init__(self, model="gpt-4-turbo"):
         self.llm = ChatOpenAI(
             model=model,
-            temperature=0.5,
+            temperature=0.6,
             openai_api_key=os.getenv("OPENAI_API_KEY")
         )
         self.prompt = ChatPromptTemplate.from_messages([
@@ -25,6 +25,7 @@ class ResponseConstructionAgent:
                 "   - Identify the nature of the query (e.g., course eligibility, enrollment procedures, general university policies, course details).\n"
                 "   - Tailor the response to align with the query's context. For example:\n"
                 "       - For eligibility queries, validate prerequisites and provide detailed course-specific recommendations.\n"
+                "       - When recommending courses, include the course code, course name, and a brief description for each course.\n"
                 "       - For general queries (e.g., 'How to enroll in a course'), provide step-by-step guidance or refer to appropriate resources.\n"
                 "\n"
                 "2. **Course Eligibility Validation:**\n"
@@ -41,11 +42,14 @@ class ResponseConstructionAgent:
                 "   - Avoid referencing specific courses, prerequisites, or program categories unless directly relevant to the general query.\n"
                 "\n"
                 "4. **Dynamic Adaptation to User Data:**\n"
-                "   - Interpret 'user_course_details' dynamically based on user-specific data. Examples include:\n"
-                "       - Identifying completed courses and their corresponding categories (e.g., core requirements, electives).\n"
-                "       - Checking credits completed in subject areas (e.g., INFO) and elective requirements.\n"
-                "       - Recognizing in-progress courses and ensuring these do not satisfy prerequisites yet.\n"
-                "       - Handling exceptions or additional program rules (e.g., certain courses counting as electives).\n"
+                "   - Interpret 'user_course_details' dynamically based on user-specific data.\n"
+                "       - Identifying completed courses and their corresponding categories (core requirements, electives, subject area).\n"
+                "       - All core courses are listed as (Category: Core Requirement) with detail as completed or not. No other core courses are there other than the one in list for the user\n"
+                "       - Accurately track credits completed in subject areas (e.g., INFO) and elective requirements, ensuring calculations are precise and aligned with program rules.\n"
+                "       - Include in-progress courses in the total credit calculation for electives or subject areas. For example, if an in-progress course contributes 4 credits to a requirement, those credits are already counted towards the total, even if the course is not yet completed.\n"
+                "       - Clearly identify how many credits have been completed in electives or subject areas and how many are still pending, taking into account both completed and in-progress courses (inprogress courses are counted in the data already).\n"
+                "       - Handling exceptions or additional program rules (e.g., certain courses counting as electives or subject area).\n"
+                " To answer question about courses the user can take. check user course details, check for core courses and status, elective/subject area required and how many is completed and form response based on that\n"
                 "\n"
                 "5. **Construct Clear Eligibility Statements:**\n"
                 "   - For each course, indicate whether the user is eligible based on prerequisites and program progress.\n"
@@ -81,6 +85,9 @@ class ResponseConstructionAgent:
                 "Construct a response based on all available information and which is relavent to user query. Use 'General Information Results' for general queries, "
                 "When a question on a specific program/core/elective other than the users program is asked check sql query and result. if sql result is empty then answer accordingly (mostly no for specified filter from sql query) "
                 "validate eligibility using 'SQL Query Results' and 'user_course_details' for course-specific queries, and provide concise, actionable guidance without referencing the raw SQL Query Results."
+                "Always check the sql query and then the sql results to check what kind of infromation we have. if it doesnt help then dont use it."
+                "We have maximum 4 credits for a course with least as 0 credits"
+                "Proof read the answer and respond"
             )
         ])
 

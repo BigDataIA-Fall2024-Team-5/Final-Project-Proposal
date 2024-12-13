@@ -30,20 +30,17 @@ class GeneralInformationAgent:
         try:
             self.pinecone_index = pc.Index(self.pinecone_index_name)
             self.pinecone_index.describe_index_stats()  # Validate index connection
-            print(f"DEBUG: Connected to Pinecone index '{self.pinecone_index_name}'.")
         except Exception as e:
             raise RuntimeError(f"Failed to connect to Pinecone index '{self.pinecone_index_name}': {e}")
 
     def generate_embedding(self, query):
         try:
-            print(f"DEBUG: Generating embedding for query: '{query}'")
             return embedding_client.embed_query(query)
         except Exception as e:
             raise RuntimeError(f"Failed to generate embeddings for query '{query}': {e}")
 
     def search_pinecone(self, query):
         try:
-            print("DEBUG: Searching Pinecone...")
             query_embedding = self.generate_embedding(query)
             search_results = self.pinecone_index.query(
                 vector=query_embedding,
@@ -59,9 +56,6 @@ class GeneralInformationAgent:
                 for match in matches
                 if match["metadata"].get("text", "").strip()
             ]
-            print("DEBUG: Pinecone Results:")
-            for result in results:
-                print(f"Text: {result['text']}, Score: {result['score']}")
             
             # Apply a relevance threshold
             threshold = 0.6
@@ -75,7 +69,6 @@ class GeneralInformationAgent:
 
     def search_tavily(self, query):
         try:
-            print("DEBUG: Searching Tavily...")
             response = tavily_client.search(
                 query=query,
                 include_domains=["northeastern.edu"]  # Restrict search to Northeastern University's domain
@@ -90,10 +83,6 @@ class GeneralInformationAgent:
                     }
                     for result in sorted(response["results"], key=lambda x: x.get("score", 0), reverse=True)[:3]
                 ]
-                print("DEBUG: Tavily Results:")
-                for result in results:
-                    print(f"Title: {result['title']}, URL: {result['url']}, Snippet: {result['snippet']}, Score: {result['score']}")
-                return results
             print("DEBUG: No relevant results from Tavily.")
             return []
         except Exception as e:

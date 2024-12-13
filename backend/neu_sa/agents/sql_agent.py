@@ -36,7 +36,7 @@ class SQLAgent:
                 "      - Do NOT use user-specific attributes unless the query is about the user program.\n"
                 "\n"
                 "3. **Use Context Parameters If the query is about user specfic**:\n"
-                "   - User Program Name: Use `{user_program_name}` if query is about the user.\n"
+                "   - User Program Name: Use `{user_program_name}` if query is about the user's program.\n"
                 "   - User Campus: Use `{user_campus}` (e.g., class schedules for user campus if asked explicitly).\n"
                 "   - User Credits Left: Use `{user_credits_left}` only if needed to answer the user query.\n"
                 "\n"
@@ -63,7 +63,8 @@ class SQLAgent:
                 "\n"
                 "11. **Avoid Redundancy**: Do not add unnecessary filters or conditions that are not directly specified in the user's query. Focus on the provided parameters for filtering.\n"
                 "\n"
-                "12. **Optimize for Performance**: Select only the required columns and avoid redundant operations. If more than one query is required to answer the question, consider combining them using Common Table Expressions (CTEs) or other efficient SQL techniques but respond with a single query.\n"
+                "12. **Optimize for Performance**: Select only the required columns. If more than one query is required to answer the question, consider combining them using Common Table Expressions (CTEs) or other efficient SQL techniques but respond with a single query which results in a understandable format.\n"
+                "13. Use Program Name for filtering rather than program id, use program id for joining tables.\n"
             ),
             (
                 "user",
@@ -149,7 +150,7 @@ class SQLAgent:
             cursor.close()
 
 
-    def generate_query(self, user_query: str, schema: str, course_codes: list, user_program_name: str, user_campus: str, user_credits_left: str,chat_history:str) -> str:
+    def generate_query(self, user_query: str, schema: str, course_codes: list, user_program_name: str, user_campus: str, user_credits_left: str,chat_history:str, user_course_profile: list) -> str:
         response = self.llm.invoke(self.prompt.format(
             query=user_query,
             schema=schema,
@@ -158,6 +159,7 @@ class SQLAgent:
             user_campus=user_campus,
             user_credits_left=user_credits_left,
             chat_history=chat_history,
+            user_course_profile=user_course_profile,
         ))
         return response.content.strip()
 
@@ -187,6 +189,7 @@ class SQLAgent:
                 "Failed Query: {query}\n\n"
                 "Error Message: {error}\n\n"
                 "Database Schema:\n{schema}\n\n"
+                "User Course Profile (to know about user's course background):\n{user_course_profile}\n\n"
                 "Additional Info: The CLASSES table uses 'Spring YYYY Semester' or 'Fall YYYY Semester' format for terms. "
                 "Course codes are typically in the format 'SUBJ NNNN'.\n\n"
                 "Please correct the SQL query to resolve the error and ensure it follows the correct schema and data formats. "
@@ -233,6 +236,7 @@ class SQLAgent:
         user_credits_left = user_details.get("credits_left", "N/A")
         user_program_name = user_details.get("program_name", "N/A")
         user_campus = user_details.get("campus", "N/A")
+        user_course_profile=state.get("user_course_details", [])
 
         chat_history = "\n".join(
             f"{msg['role'].capitalize()}: {msg['content']}" for msg in state["chat_history"]
@@ -243,7 +247,7 @@ class SQLAgent:
         if state.get("course_description_results"):
             course_codes = [result["course_code"] for result in state["course_description_results"] if result["course_code"] != "Unknown"]
         
-        generated_query = self.generate_query(state["query"], schema, course_codes,user_program_name,user_campus,user_credits_left,chat_history)
+        generated_query = self.generate_query(state["query"], schema, course_codes,user_program_name,user_campus,user_credits_left,chat_history,user_course_profile)
 
         if not generated_query:
             state["sql_results"] = {"error": "No valid query generated to execute."}
