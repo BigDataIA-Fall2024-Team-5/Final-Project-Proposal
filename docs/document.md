@@ -376,7 +376,7 @@ This pipeline automates the collection of class data for multiple semesters, mer
 
 ```mermaid
 flowchart TD
-    A["Task Execution Agent"] -- Identify and Schedule Agents --> B["Agent Execution e.g. SQL Agent, User Course Agent"]
+    A["Task Detection Agent"] -- Identify and Schedule Agents --> B["Agent Execution e.g. SQL Agent, User Course Agent"]
     B -- Return Updated State --> C["Response Generation Agent"]
     C -- Compose and Deliver Final Answer --> D["Final Response"]
      A:::Sky
@@ -930,7 +930,6 @@ Yes, the feature to display course prerequisites is included as part of the subj
 - [Program Requirements (Sample for One Program)](https://catalog.northeastern.edu/graduate/engineering/multidisciplinary/information-systems-msis/#programrequirementstext)  
 
 ## Other Data Sources
-- [Course Registration](https://coe.northeastern.edu/academics-experiential-learning/graduate-school-of-engineering/graduate-student-services/course-registration/)  
 - [Graduate Resources](https://coe.northeastern.edu/academics-experiential-learning/graduate-school-of-engineering/graduate-student-services/university-graduate-resources/)  
 - [FAQ for Students](https://coe.northeastern.edu/academics-experiential-learning/graduate-school-of-engineering/graduate-student-services/faqs-for-newly-admitted-and-current-students/)  
 - [Graduation Commencement](https://coe.northeastern.edu/academics-experiential-learning/graduate-school-of-engineering/graduate-student-services/graduation-commencement/)  
